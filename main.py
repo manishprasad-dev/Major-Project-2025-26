@@ -13,19 +13,14 @@ import math
 import threading
 
 
-#! Module Import
+#! Manual Module Imports
 from Utils.utils_icons import load_icons
 from Utils.utils_audio import SoundManager
 from Utils.camera_utils import start_camera
 from splash import SplashScreen
-# import threading
-
-# from Menu_Utils.menu_windows import MenuWindow
-# from Utils.color_function import RedColor
 
 
 window = tk.Tk()
-# window.geometry("1100x600")
 appicon = tk.PhotoImage(file="Icons/App_Icon.png")
 window.iconphoto(False , appicon)
 
@@ -36,13 +31,13 @@ sound_on=True#-->Default Sound state
 #! Importing Module Function
 icons = load_icons(window)
 sound = SoundManager()
-# camera module will be imported here
 
-# menu_win = MenuWindow(window)
+activeMenuWidgetBackground = "#FFFFFF" 
+hoverMenuWidgetBackground = "#747472"
+frameTwoBackgroudColor = "#D5DCD3"
 
-activeMenuWidgetBackground = "#FFFFFF"; 
-hoverMenuWidgetBackground = "#595957";
-frameTwoBackgroudColor = "#92EC7C"
+toolbarHoverColor = "#88F1E1"
+
 # ------------------------------------------Parent-Frame-Section-Open----------------------------------------------------------+
 menuFrame = ctk.CTkFrame(master= window , fg_color= activeMenuWidgetBackground , height=50)
 frameOne = ctk.CTkFrame(master = window  ,fg_color = frameTwoBackgroudColor,height=160)
@@ -68,34 +63,11 @@ original_image=None
 canvas_virtual_size=100000
 pencil_select=0
 
-# ------------------------------------------GlobalVariable----------------------------------------------------------+
 start_AI_is_running=False 
 Ai_Mode=False
-#-------------------------------------------Color-Box-Frame-Open--------------------------------------------------------------------+
-# This Compartment Of The Code Handle The Position And Other Things Of The Color Selection Box
-def selectcolor():
-    global stroke_color
-    global current_color_label
-    if sound_on:
-        sound.play("selectcolor_Sound")
-    selectedcolor = colorchooser.askcolor("red" , title="Select Color")
-    stroke_color.set(selectedcolor[1])
-    current_color_label.config(bg=selectedcolor[1])
+# ------------------------------------------GlobalVariable----------------------------------------------------------+
 
-colorBoxButton= ctk.CTkButton(master = frameOne  , width=55, height=55, command=selectcolor , image= icons["select_color"] , fg_color=frameTwoBackgroudColor)
-colorBoxButton.place(x=740, y=37)
 
-#-------------------------------------------Color-Box-Frame-Close--------------------------------------------------------------------+
-#-------------------------------------------Camera-OPEN------------------------------------------------------------------------------+
-def camera():
-    if sound_on and not start_AI_is_running:
-        sound.play("CameraOpen_Sound")
-    threading.Thread(target=start_camera, args=(sound,)).start()
-CameraButton= Button(frameOne  , width=90, height=90 ,image= icons["camera"],command=camera ,bg="#D6F5EF" , activebackground="#D6F5EF" , highlightthickness=0 , relief="flat",bd=0)
-CameraButton.place(x=820, y=40)
-
-cameraLabel = tk.Label(frameOne , text="Camera" , width=20 ,bg="#D6F5EF"  )
-cameraLabel.place(x = 793 , y = 130)
 #-------------------------------------------Camera-Close-----------------------------------------------------------------------------
 # !-------------------------------------------Menu-Bar----------------------------------------------------------------------+
 menuToolFrame = ctk.CTkFrame(master= menuFrame , fg_color=activeMenuWidgetBackground)
@@ -346,7 +318,24 @@ helpButton.pack(side="left", padx=0)
 settingButton.pack(side="left", padx=0)
 aboutButton.pack(side="left", padx=0)
 # !-------------------------------------------Menu-Bar----------------------------------------------------------------------+
-#-------------------------------------------Current-Color----------------------------------------------------------------------------------------
+
+# ! Color Frame
+colorFrame=tk.LabelFrame(frameOne ,text="Colors", height=170, width=230 , borderwidth=0 ,relief="sunken" ,bg="#D6F5EF")
+colorFrame.place(x=545,y=45)
+
+# !Frame One Tools Functionality Section
+def selectcolor():
+    global stroke_color
+    global current_color_label
+    if sound_on:
+        sound.play("selectcolor_Sound")
+    selectedcolor = colorchooser.askcolor("red" , title="Select Color")
+    stroke_color.set(selectedcolor[1])
+    current_color_label.config(bg=selectedcolor[1])
+def camera():
+    if sound_on and not start_AI_is_running:
+        sound.play("CameraOpen_Sound")
+    threading.Thread(target=start_camera, args=(sound,)).start()
 
 def add_text_window():
     new_window = tk.Toplevel(window)
@@ -375,81 +364,99 @@ def add_text_window():
     y_slider.set(125)
     y_slider.place(x = 350 , y = 200)
 
-# gives the idea of current selected color
-current_color_label=tk.Label(frameOne,width=4,height=1,bg=stroke_color.get(),relief="solid",bd=1)
-current_color_label.place(x=752,y=88)
 
-#-------------------------------------------Current-Color--------------------------------------------------------------------------------
-
-
-
-
-#-------------------------------------------Colors-Frame-Open--------------------------------------------------------------------+
-# This Section Handle The Required Basic Colors Of Sets At The Upper Frame Of The Paint Window
-colorFrame=tk.LabelFrame(frameOne ,text="Colors", height=170, width=230 , borderwidth=0 ,relief="sunken" ,bg="#D6F5EF")
-colorFrame.place(x=545,y=45)
+#! -------------------------------------------Frame-One--------------------------------------------------------------------------------
 
 def RedColor():
     stroke_color.set("Red")
     current_color_label.config(bg="red")
-redButton=Button(colorFrame ,bg="Red",width=3 , height=1,activebackground="red", command=RedColor, highlightthickness=0 , relief="flat")
-redButton.grid(row=0,column=0 ,padx=5 , pady=5)
+
 
 def GreenColor():
     stroke_color.set("Green")
     current_color_label.config(bg="Green")
-greenButton=Button(colorFrame ,bg="Green",width=3,height = 1,activebackground="green", command=GreenColor, highlightthickness=0 , relief="flat")
-greenButton.grid(row=0,column=1,padx=5 , pady=5)
+
 
 def BlueColor():
     stroke_color.set("Blue")
     current_color_label.config(bg="Blue")
-blueButton=Button(colorFrame ,bg="Blue",width=3,height = 1,activebackground="blue", command=BlueColor, highlightthickness=0 , relief="flat")
-blueButton.grid(row=0,column=2,padx=5 , pady=5)
+
 
 def YellowColor():
     stroke_color.set("Yellow")
     current_color_label.config(bg="Yellow")
-yellowButton=Button(colorFrame ,bg="Yellow",width=3,height = 1,activebackground="yellow", command=YellowColor, highlightthickness=0 , relief="flat")
-yellowButton.grid(row=0,column=3,padx=5 , pady=5)
+
 
 def GreyColor():
     stroke_color.set("Grey")
     current_color_label.config(bg="Grey")
-greyButton=Button(colorFrame ,bg="grey",width=3,height = 1,activebackground="grey", command=GreyColor, highlightthickness=0 , relief="flat")
-greyButton.grid(row=0,column=4,padx=5 , pady=5)
+
 
 def BlackColor():
     stroke_color.set("Black")
     current_color_label.config(bg="Black")
-blackButton=Button(colorFrame ,bg="black",width=3,height = 1,activebackground="Black" ,command=BlackColor, fg="white", highlightthickness=0 , relief="flat")
-blackButton.grid(row=1,column=0,padx=5 , pady=5)
+
 
 def WhiteColor():
     stroke_color.set("White")
     current_color_label.config(bg="White")
-whiteButton=Button(colorFrame ,bg="White",width=3,height = 1,activebackground="white", command=WhiteColor, highlightthickness=0 , relief="flat")
-whiteButton.grid(row=1,column=1,padx=3 , pady=3)
+
 
 def OrangeColor():
     stroke_color.set("Orange")
     current_color_label.config(bg="Orange")
-orangeButton=Button(colorFrame ,bg="Orange",width=3,height = 1,activebackground="Orange", command=OrangeColor, highlightthickness=0 , relief="flat")
-orangeButton.grid(row=1,column=2,padx=3 , pady=3)
+
 
 def PurpleColor():
     stroke_color.set("Purple")
     current_color_label.config(bg="Purple")
-purpleButton=Button(colorFrame ,bg="Purple",width=3,height = 1, activebackground="Purple",command=PurpleColor, highlightthickness=0 , relief="flat")
-purpleButton.grid(row=1,column=3,padx=3 , pady=3)
+
 
 def PinkColor():
     stroke_color.set("Pink")
     current_color_label.config(bg="Pink")
+
+
+greenButton=Button(colorFrame ,bg="Green",width=3,height = 1,activebackground="green", command=GreenColor, highlightthickness=0 , relief="flat")
+greenButton.grid(row=0,column=1,padx=5 , pady=5)
+
+redButton=Button(colorFrame ,bg="Red",width=3 , height=1,activebackground="red", command=RedColor, highlightthickness=0 , relief="flat")
+redButton.grid(row=0,column=0 ,padx=5 , pady=5)
+
+blueButton=Button(colorFrame ,bg="Blue",width=3,height = 1,activebackground="blue", command=BlueColor, highlightthickness=0 , relief="flat")
+blueButton.grid(row=0,column=2,padx=5 , pady=5)
+
+yellowButton=Button(colorFrame ,bg="Yellow",width=3,height = 1,activebackground="yellow", command=YellowColor, highlightthickness=0 , relief="flat")
+yellowButton.grid(row=0,column=3,padx=5 , pady=5)
+
+greyButton=Button(colorFrame ,bg="grey",width=3,height = 1,activebackground="grey", command=GreyColor, highlightthickness=0 , relief="flat")
+greyButton.grid(row=0,column=4,padx=5 , pady=5)
+
+blackButton=Button(colorFrame ,bg="black",width=3,height = 1,activebackground="Black" ,command=BlackColor, fg="white", highlightthickness=0 , relief="flat")
+blackButton.grid(row=1,column=0,padx=5 , pady=5)
+
+whiteButton=Button(colorFrame ,bg="White",width=3,height = 1,activebackground="white", command=WhiteColor, highlightthickness=0 , relief="flat")
+whiteButton.grid(row=1,column=1,padx=3 , pady=3)
+
+orangeButton=Button(colorFrame ,bg="Orange",width=3,height = 1,activebackground="Orange", command=OrangeColor, highlightthickness=0 , relief="flat")
+orangeButton.grid(row=1,column=2,padx=3 , pady=3)
+
+purpleButton=Button(colorFrame ,bg="Purple",width=3,height = 1, activebackground="Purple",command=PurpleColor, highlightthickness=0 , relief="flat")
+purpleButton.grid(row=1,column=3,padx=3 , pady=3)
+
 pinkButton=Button(colorFrame ,bg="pink",width=3,height = 1, activebackground="pink",command=PinkColor, highlightthickness=0 , relief="flat")
 pinkButton.grid(row=1,column=4,padx=1 , pady=1)
 
 MoreColors=Button
+
+colorBoxButton= ctk.CTkButton(master = frameOne  , width=55, height=55, command=selectcolor , image= icons["select_color"] , fg_color=frameTwoBackgroudColor)
+colorBoxButton.place(x=740, y=37)
+
+CameraButton= Button(frameOne  , width=90, height=90 ,image= icons["camera"],command=camera ,bg="#D6F5EF" , activebackground="#D6F5EF" , highlightthickness=0 , relief="flat",bd=0)
+CameraButton.place(x=820, y=40)
+
+cameraLabel = tk.Label(frameOne , text="Camera" , width=20 ,bg="#D6F5EF"  )
+cameraLabel.place(x = 793 , y = 130)
 #-------------------------------------------Colors-Frame-Close--------------------------------------------------------------------+
 
 # ------------------------------------------Tool-Functionality-Section-Open----------------------------------------------------------+
@@ -487,30 +494,30 @@ def addText():
     add_text_window()
 # ------------------------------------------Tool-Functionality-Section-Close----------------------------------------------------------+
 
-# ----------------------------------------------------------------------------------------------------+
+#! ---------------------------------------------------------------------------------------------------------------
 # Tool Frame Which Will Contain All The Required Tools etc - pencil , eraser , color
-
-
 toolFrame = ctk.CTkFrame(frameOne ,height=80 , width=120 , fg_color=frameTwoBackgroudColor , border_width=2 , border_color="black")
 toolFrame.pack(side = "left",padx = 20  , pady = 50 )
 
 #Pencil Button/Icon -> Onclicking The Button The User Can Use The Pencil   
-pencilIcon = ctk.CTkButton(master = toolFrame , text="",fg_color=frameTwoBackgroudColor , width=25 , height=25 , image= icons["pencil"], command=usePencil)
+pencilIcon = ctk.CTkButton(master = toolFrame , text="",fg_color=frameTwoBackgroudColor , hover_color=toolbarHoverColor,width=25 , height=25 , image= icons["pencil"], command=usePencil)
 pencilIcon.place(x = 5 , y = 5 )
 
 # Rubber Button/Icon
-eraserIcon = ctk.CTkButton(master = toolFrame , text="",fg_color=frameTwoBackgroudColor , width=25, height=25 , image=icons["eraser"], command= useEraser)
+eraserIcon = ctk.CTkButton(master = toolFrame , text="",fg_color=frameTwoBackgroudColor , hover_color=toolbarHoverColor,     width=25, height=25 , image=icons["eraser"], command= useEraser)
 eraserIcon.place(x = 5 , y = 40)
 
 # Font Icon
-fontIcon = ctk.CTkButton(master = toolFrame , text="",fg_color=frameTwoBackgroudColor , width=25, height=25 , image=icons["font"],command= addText)
+fontIcon = ctk.CTkButton(master = toolFrame , text="",fg_color=frameTwoBackgroudColor , hover_color=toolbarHoverColor, width=25, height=25 , image=icons["font"],command= addText)
 fontIcon.place(x = 40 , y = 5)
 
 # Fill Icon+
-fillIcon = ctk.CTkButton(master = toolFrame , text="", fg_color=frameTwoBackgroudColor ,width=25, height=25, image=icons["fill"])
+fillIcon = ctk.CTkButton(master = toolFrame , text="", fg_color=frameTwoBackgroudColor ,hover_color=toolbarHoverColor,width=25, height=25, image=icons["fill"])
 fillIcon.place(x=80, y = 5)
 
-# One More Icon keep x = 80 and y = 40
+# gives the idea of current selected color
+current_color_label=tk.Label(frameOne,width=4,height=1,bg=stroke_color.get(),relief="solid",bd=1)
+current_color_label.place(x=752,y=88)
 
 # ----------------------------------------------------------------------------------------------------
 # Adding Borders Along The Different Tools
