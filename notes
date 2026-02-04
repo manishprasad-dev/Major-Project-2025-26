@@ -1,1 +1,27 @@
-refactor the menu frame UI with ttkBootstrap
+# refactor the menu frame UI with ttkBootstrap
+
+
+
+
+
+
+
+# Adding Borders Along The Different Tools
+# border_frame_first = tk.Frame(frameOne , width=2 , height= 100 , bg="black")
+# border_frame_first.place(x = 160 , y = 50)
+
+# border_frame_one = tk.Frame(frameOne , width=2 , height= 100 , bg="black")
+# border_frame_one.place(x = 290 , y = 50)
+
+# border_frame_two = tk.Frame(frameOne , width=2 , height= 100 , bg="black")
+# border_frame_two.place(x = 530 , y = 50)
+
+# border_frame_three = tk.Frame(frameOne , width=2 , height= 100 , bg="black")
+# border_frame_three.place(x = 810 , y = 50)
+
+# border_frame_four = tk.Frame(frameOne , width=2 , height= 100 , bg="black")
+# border_frame_four.place(x = 915 , y = 50)
+# ----------------------------------------------------------------------------------------------------
+# Implementing Scale For Pencil Stroke Size So That The User Can Use The Scale To Increase The Size Of The Pencil And Eraser Stroke
+
+#----------------------------------------------------------------------------------------------------

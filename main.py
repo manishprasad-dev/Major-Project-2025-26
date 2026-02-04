@@ -43,12 +43,13 @@ toolbarHoverColor = "#88F1E1"
 
 # ------------------------------------------Parent-Frame-Section-Open----------------------------------------------------------+
 menuFrame = ctk.CTkFrame(master= window , fg_color= activeMenuWidgetBackground , height=50)
-frameOne = ctk.CTkFrame(master = window  ,fg_color = frameTwoBackgroudColor,height=160)
+frameOne = ctk.CTkFrame(master = window  ,fg_color = frameTwoBackgroudColor)
 frameTwo = ctk.CTkFrame(master = window , fg_color="#134B40" ,height=800)
 frameFoot = ctk.CTkFrame(master = window , fg_color="#5FD5BD" , height=30)
 
 menuFrame.pack(side = "top" , fill = "x",expand=True) 
 frameOne.pack(side = "top", fill = "x")
+frameOne.pack_propagate(False) 
 frameTwo.pack(side = "top", fill = "x") #canvas will be placed in this frame
 frameFoot.pack(side = "top", fill = "x" , pady = 20)
 #------------------------------------Global-Variables-------------------------------------------------------------------
@@ -335,7 +336,7 @@ def selectcolor():
         sound.play("selectcolor_Sound")
     selectedcolor = colorchooser.askcolor("red" , title="Select Color")
     stroke_color.set(selectedcolor[1])
-    current_color_label.config(bg=selectedcolor[1])
+    # current_color_label.config(bg=selectedcolor[1])
 def camera():
     if sound_on and not start_AI_is_running:
         sound.play("CameraOpen_Sound")
@@ -384,63 +385,78 @@ def toggle_mic():
 
 # ? SubFrames Of Frame One
 
-# toolFrame.pack(side = "left",padx = 20  , pady = 50 )
-toolFrame = ctk.CTkFrame(frameOne ,height=80 , width=120 , fg_color=frameTwoBackgroudColor , border_width=2 , border_color="black")
-toolFrame.place(x=20,y=5 )
+frameOne.grid_rowconfigure(0, weight=1)
 
-Line_TypeFrame=tk.LabelFrame(frameOne , text="Linetypes", height=75, width=130 )
-Line_TypeFrame.place(x=165,y=52)
+toolFrame = ctk.CTkFrame(
+    master = frameOne,
+    height=100,
+    width=150,
+    fg_color=frameTwoBackgroudColor,
+    border_width=2,
+    border_color="black"
+)
+toolFrame.grid(row=0, column=0, padx=10, pady=10)
 
-shapeFrame=tk.LabelFrame(frameOne , text="Shapes",height=70, width=220 , borderwidth=0 ,relief="sunken" ,bg="#E6F1F0")
-shapeFrame.place(x=300,y=55)
+lineTypeFrame = ctk.CTkFrame(
+    master=frameOne,
+    # text="Linetypes",
+    height=100,
+    width=150,
+    fg_color=frameTwoBackgroudColor,
+    border_width=2,
+    border_color="black"
+)
+lineTypeFrame.grid(row=0, column=1, padx=10, pady=10)
 
-colorFrame = ctk.CTkFrame(master=frameOne, fg_color=frameTwoBackgroudColor, height=100, width=150)
-colorFrame.place(x=545, y=45)
+shapeFrame = ctk.CTkFrame(
+    master=frameOne,
+    height=100,
+    width=220,
+    fg_color=frameTwoBackgroudColor,
+    border_width=2,
+    border_color="black"
+)
+shapeFrame.grid(row=0, column=2, padx=10, pady=10)
 
-addColorFrame = ctk.CTkFrame(master= frameOne , fg_color=frameTwoBackgroudColor)
-addColorFrame.place(x=740, y=37)
+colorFrame = ctk.CTkFrame(
+    master=frameOne,
+    height=100,
+    # width=150,
+    fg_color=frameTwoBackgroudColor,
+    border_width=2,
+    border_color="black"
+)
+colorFrame.grid(row=0, column=3, padx=10, pady=10)
 
-cameraFrame = ctk.CTkFrame(master= frameOne , fg_color=frameTwoBackgroudColor)
-cameraFrame.place(x=900, y=40)
+addColorFrame = ctk.CTkFrame(
+    frameOne,
+    height=100,
+    width=100,
+    fg_color=frameTwoBackgroudColor,
+    border_width=2,
+    border_color="black"
+    
+)
+addColorFrame.grid(row=0, column=4, padx=10, pady=10)
 
-micFrame = ctk.CTkFrame(master= frameOne , fg_color=frameTwoBackgroudColor)
-micFrame.place(x=1000,y=48)
+cameraFrame = ctk.CTkFrame(
+    frameOne,
+    fg_color=frameTwoBackgroudColor
+)
+cameraFrame.grid(row=0, column=5, padx=10, pady=10)
 
+micFrame = ctk.CTkFrame(
+    frameOne,
+    fg_color=frameTwoBackgroudColor
+)
+micFrame.grid(row=0, column=6, padx=10, pady=10)
 
+toolFrame.grid_propagate(False)
+lineTypeFrame.grid_propagate(False)
+shapeFrame.grid_propagate(False)
+colorFrame.grid_propagate(False)
 
-#! -------------------------------------------Frame-One--------------------------------------------------------------------------------
-
-colors = ["Red", "Green", "Blue", "Yellow", "Grey",
-          "Black", "White", "Orange", "Purple", "Pink"]
-
-for index, color in enumerate(colors):
-    row = index // 5      # 0 or 1
-    col = index % 5       # 0 to 4
-
-    ctk.CTkButton(
-        master=colorFrame,
-        text=None,
-        fg_color=color.lower(),
-        hover_color=color.lower(),
-        width=25,
-        height=25,
-        corner_radius=12,
-        command=lambda c=color: stroke_color.set(c.lower())
-    ).grid(row=row, column=col, padx=5, pady=5)
-
-
-colorBoxButton= ctk.CTkButton(master = addColorFrame ,text=None, command=selectcolor , image= icons["select_color"] , fg_color=frameTwoBackgroudColor , hover_color=hoverMenuWidgetBackground)
-colorBoxButton.place(x=0, y=0)
-
-CameraButton= ctk.CTkButton(master = cameraFrame , text=None,image= icons["camera"],command=camera , fg_color=frameTwoBackgroudColor , hover_color=hoverMenuWidgetBackground)
-CameraButton.place(x=0, y=0)
-
-Mic_Button= ctk.CTkButton(master=micFrame,text=None,image=icons["mic"],command=toggle_mic  , fg_color=frameTwoBackgroudColor , hover_color=hoverMenuWidgetBackground)
-Mic_Button.place(x=0,y=0)
-#-------------------------------------------Colors-Frame-Close--------------------------------------------------------------------+
-
-# ------------------------------------------Tool-Functionality-Section-Open----------------------------------------------------------+
-# This Part Of The Code Is Crucial As It Handles The Functionality Of The Buttons
+#! ---------------------------------------------------------------------------------------------------------------
 
 def usePencil():
     global pencil_select
@@ -454,7 +470,7 @@ def usePencil():
         if pencil_select==1:
             window.after(6000, lambda:sound.play("DefaultBlack_Sound"))
             stroke_color.set("black")
-            current_color_label.config(bg="Black")
+            # current_color_label.config(bg="Black")
 
     canvas.config(cursor = "crosshair")
     SolidLineButton.configure(fg_color="white")
@@ -466,18 +482,12 @@ def useEraser():
     if sound_on and not start_AI_is_running:
         sound.play("Eraser_Sound")
     stroke_color.set("white")
-    current_color_label.config(bg="white")
+    # current_color_label.config(bg="white")
     canvas.config(cursor = "dotbox")
 
 def addText():
     add_text_window()
-# ------------------------------------------Tool-Functionality-Section-Close----------------------------------------------------------+
 
-#! ---------------------------------------------------------------------------------------------------------------
-# Tool Frame Which Will Contain All The Required Tools etc - pencil , eraser , color
-
-
-#Pencil Button/Icon -> Onclicking The Button The User Can Use The Pencil   
 pencilIcon = ctk.CTkButton(master = toolFrame , text="",fg_color=frameTwoBackgroudColor , hover_color=toolbarHoverColor,width=25 , height=25 , image= icons["pencil"], command=usePencil)
 pencilIcon.place(x = 5 , y = 5 )
 
@@ -492,47 +502,9 @@ fontIcon.place(x = 40 , y = 5)
 # Fill Icon+
 fillIcon = ctk.CTkButton(master = toolFrame , text="", fg_color=frameTwoBackgroudColor ,hover_color=toolbarHoverColor,width=25, height=25, image=icons["fill"])
 fillIcon.place(x=80, y = 5)
+#! ----------------------------------------------------------------------------------------------------
 
-# gives the idea of current selected color
-current_color_label=tk.Label(frameOne,width=4,height=1,bg=stroke_color.get(),relief="solid",bd=1)
-current_color_label.place(x=752,y=88)
-
-# ----------------------------------------------------------------------------------------------------
-# Adding Borders Along The Different Tools
-# border_frame_first = tk.Frame(frameOne , width=2 , height= 100 , bg="black")
-# border_frame_first.place(x = 160 , y = 50)
-
-# border_frame_one = tk.Frame(frameOne , width=2 , height= 100 , bg="black")
-# border_frame_one.place(x = 290 , y = 50)
-
-# border_frame_two = tk.Frame(frameOne , width=2 , height= 100 , bg="black")
-# border_frame_two.place(x = 530 , y = 50)
-
-# border_frame_three = tk.Frame(frameOne , width=2 , height= 100 , bg="black")
-# border_frame_three.place(x = 810 , y = 50)
-
-# border_frame_four = tk.Frame(frameOne , width=2 , height= 100 , bg="black")
-# border_frame_four.place(x = 915 , y = 50)
-# ----------------------------------------------------------------------------------------------------
-# Implementing Scale For Pencil Stroke Size So That The User Can Use The Scale To Increase The Size Of The Pencil And Eraser Stroke
-stroke_size = tk.IntVar(value = 5)
-
-scale= ctk.CTkSlider(master = window , from_=1, to=100 , orientation ="vertical" ,variable=stroke_size , height=300,progress_color="#370B42",button_color="#1D0088",fg_color="#A5EAFF")
-scale.place(x =10 ,y = 200)
-def incre_scale(event):
-    global stroke_size
-    if event.delta > 0 :
-        res = stroke_size.get() + 2
-        stroke_size.set(res)
-    else:
-        res = stroke_size.get() - 2
-        stroke_size.set(res)
-#---This will show stroke size-----------------------------------------------------------------------
-size_label = tk.Label(window, textvariable=stroke_size, bg="#FFFFFF" , width=2)
-size_label.place(x=10, y=500)
-#----------------------------------------------------------------------------------------------------
-
-#----------------------------------------------Line-Type----------------------------------------------------------------
+#! ----------------------------------------------Line-Type-Start--------------------------------------------------------------
 def solidline():
     global current_line
     current_line=1
@@ -565,58 +537,19 @@ def DottedLine():
     SolidLineButton.configure(fg_color="#E5F0EF")
     canvas.config(cursor = "dot")
 
-SolidLineButton=ctk.CTkButton(master=Line_TypeFrame,text="━━━━",font=("Arial",18,"bold"),width=120,height=20,command=solidline,fg_color="#E5F0EF",text_color="black",hover_color="white")
-SolidLineButton.grid(row=1,column=0)
+SolidLineButton=ctk.CTkButton(master=lineTypeFrame,text="━━━━",command=solidline,text_color="black",hover_color="white")
+SolidLineButton.grid(row=1,column=0 , padx = 2,pady=2 )
 
-DashedLineButton=ctk.CTkButton(master=Line_TypeFrame,text="- - - - - - - -",font=("Arial",18),width=120,height=25,command=DashedLine,fg_color="#E5F0EF",text_color="black",hover_color="white")
-DashedLineButton.grid(row=2,column=0)
+DashedLineButton=ctk.CTkButton(master=lineTypeFrame,text="- - - - - - - -",command=DashedLine,text_color="black",hover_color="white")
+DashedLineButton.grid(row=2,column=0 , padx = 2,pady=2 )
 
-DottedLineButton=ctk.CTkButton(master=Line_TypeFrame,text="................",font=("Arial",18),width=120,height=10,command=DottedLine,fg_color="#E5F0EF",text_color="black",hover_color="white")
-DottedLineButton.grid(row=3,column=0)
-#----------------------------------------------Line-Type------------------------------------------------------------------
-# The Canvas Frame Where The User Can Draw Things
-canvas = tk.Canvas(frameTwo , width=1280 , height=800 , bg="white")
-canvas.grid(row=0,column=0)
+DottedLineButton=ctk.CTkButton(master=lineTypeFrame,text="................",command=DottedLine,text_color="black",hover_color="white")
+DottedLineButton.grid(row=3,column=0 , padx = 2,pady=2 )
 
-canvas.configure(scrollregion=(-canvas_virtual_size,-canvas_virtual_size,canvas_virtual_size,canvas_virtual_size))
-canvas.config(cursor="crosshair")
-# ----------------------------------------------------------------------------------------------------
-#Creating Pencil Functionality For The Paint Program
-prevPoint = [0,0]
-currentPoint = [0,0]
-
-def get_line_dash_pattern():
-    global current_line
-    if current_line==1:
-        return()
-    elif current_line==2:
-        return(30,15)
-    elif current_line==3:
-        return(1,10)
-    else:
-        return()
-
-def paint(event):
-    # print(event.type)
-    global is_pan_active
-    global prevPoint
-    global currentPoint
-    global current_line
-    x = canvas.canvasx(event.x)
-    y = canvas.canvasy(event.y)
-    currentPoint =[x,y]
-#----------------------------------------------------------------------------------------------------------------------------------
-
-    if prevPoint != [0,0] :
-        item=canvas.create_line(prevPoint[0] , prevPoint[1] , currentPoint[0] , currentPoint[1] ,fill=stroke_color.get() , width=stroke_size.get() , capstyle=tk.ROUND , smooth=True , splinesteps=36,dash=get_line_dash_pattern())
-        undo_stack.append(item)   
-    prevPoint = currentPoint 
-
-    if event.type == "5":
-        prevPoint = [0,0]   
+#! ----------------------------------------------Line-Type-End---------------------------------------------------------------
 
 
-#-------------------------------------Shape--Frame---Open--------------------------------------------------------------------------------------
+#!-------------------------------------Shape--Frame---Open--------------------------------------------------------------------------------------
 
 #Circle--
 def select_circle():
@@ -679,12 +612,7 @@ def select_heart():
         sound.play("Heart_Sound")
 heart_Shape_Button = ctk.CTkButton(shapeFrame, text="", command=select_heart, width=4, height=1, image = icons["heart"] , fg_color = "transparent")
 heart_Shape_Button.place(x = 35 , y = 40)
-#cloud---------------------------------------------------------------------------------
-# def select_cloud():
-#     global shape
-#     shape="cloud"
-# cloud_Shape_Button = ctk.CTkButton(shapeFrame, text="Cloud", command=select_cloud, width=4, height=1)
-# cloud_Shape_Button.place(x = 70 , y = 40)
+
 #Arrow---------------------------------------------------------------------------------
 def select_arrow():
     global shape
@@ -693,13 +621,111 @@ def select_arrow():
     shape="arrow"
 arrow_Shape_Button = ctk.CTkButton(shapeFrame, text="", command=select_arrow, width=4, height=1, image = icons["arrow"] , fg_color = "transparent")
 arrow_Shape_Button.place(x = 108 , y = 40)
-#star---------------------------------------------------------------------------------
-# def select_star():
-#     global shape
-#     shape="cloud"
-# start_shape_Button = ctk.CTkButton(shapeFrame, text="Star", command=select_star, width=4, height=1)
-# start_shape_Button.place(x = 145 , y = 40)
-#------------------------------------Shape--Frame---close--------------------------------------------------------------------------------------
+
+#! ------------------------------------Shape--Frame---close--------------------------------------------------------------------------------------
+
+#! ------------------------------------Color-Frame-Open--------------------------------------------------------------------------------------
+
+colors = ["Red", "Green", "Blue", "Yellow", "Grey",
+          "Black", "White", "Orange", "Purple", "Pink"]
+
+for index, color in enumerate(colors):
+    row = index // 5      # 0 or 1
+    col = index % 5       # 0 to 4
+
+    ctk.CTkButton(
+        master=colorFrame,
+        text=None,
+        fg_color=color.lower(),
+        hover_color=color.lower(),
+        width=25,
+        height=25,
+        corner_radius=12,
+        command=lambda c=color: stroke_color.set(c.lower())
+    ).grid(row=row, column=col, padx=5, pady=5)
+
+# more add color option
+colorBoxButton= ctk.CTkButton(master = addColorFrame ,text=None, command=selectcolor , image= icons["select_color"] , fg_color=frameTwoBackgroudColor , hover_color="FFFFFF")
+colorBoxButton.pack()
+
+# shows the current selected color
+# current_color_label = tk.Label(
+#     addColorFrame,
+#     width=4,
+#     height=1,
+#     bg=stroke_color.get(),
+#     relief="solid",
+#     bd=1
+# )
+# current_color_label.pack(expand=True)
+
+#! ------------------------------------Color-Frame-Close--------------------------------------------------------------------------------------
+
+CameraButton= ctk.CTkButton(master = cameraFrame , text=None,image= icons["camera"],command=camera , fg_color=frameTwoBackgroudColor , hover_color=hoverMenuWidgetBackground)
+CameraButton.pack()
+
+Mic_Button= ctk.CTkButton(master=micFrame,text=None,image=icons["mic"],command=toggle_mic  , fg_color=frameTwoBackgroudColor , hover_color=hoverMenuWidgetBackground)
+Mic_Button.pack()
+#----------------------------------------------Line-Type------------------------------------------------------------------
+
+
+stroke_size = tk.IntVar(value = 5)
+
+scale= ctk.CTkSlider(master = window , from_=1, to=100 , orientation ="vertical" ,variable=stroke_size , height=300,progress_color="#370B42",button_color="#1D0088",fg_color="#A5EAFF")
+scale.place(x =10 ,y = 200)
+def incre_scale(event):
+    global stroke_size
+    if event.delta > 0 :
+        res = stroke_size.get() + 2
+        stroke_size.set(res)
+    else:
+        res = stroke_size.get() - 2
+        stroke_size.set(res)
+#---This will show stroke size-----------------------------------------------------------------------
+size_label = tk.Label(window, textvariable=stroke_size, bg="#FFFFFF" , width=2)
+size_label.place(x=10, y=500)
+# The Canvas Frame Where The User Can Draw Things
+canvas = tk.Canvas(frameTwo , width=1280 , height=800 , bg="white")
+canvas.grid(row=0,column=0)
+
+canvas.configure(scrollregion=(-canvas_virtual_size,-canvas_virtual_size,canvas_virtual_size,canvas_virtual_size))
+canvas.config(cursor="crosshair")
+# ----------------------------------------------------------------------------------------------------
+#Creating Pencil Functionality For The Paint Program
+prevPoint = [0,0]
+currentPoint = [0,0]
+
+def get_line_dash_pattern():
+    global current_line
+    if current_line==1:
+        return()
+    elif current_line==2:
+        return(30,15)
+    elif current_line==3:
+        return(1,10)
+    else:
+        return()
+
+def paint(event):
+    # print(event.type)
+    global is_pan_active
+    global prevPoint
+    global currentPoint
+    global current_line
+    x = canvas.canvasx(event.x)
+    y = canvas.canvasy(event.y)
+    currentPoint =[x,y]
+#----------------------------------------------------------------------------------------------------------------------------------
+
+    if prevPoint != [0,0] :
+        item=canvas.create_line(prevPoint[0] , prevPoint[1] , currentPoint[0] , currentPoint[1] ,fill=stroke_color.get() , width=stroke_size.get() , capstyle=tk.ROUND , smooth=True , splinesteps=36,dash=get_line_dash_pattern())
+        undo_stack.append(item)   
+    prevPoint = currentPoint 
+
+    if event.type == "5":
+        prevPoint = [0,0]   
+
+
 start_x=0
 start_y=0
 def start_shape(event):
