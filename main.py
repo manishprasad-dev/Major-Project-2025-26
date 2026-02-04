@@ -1,4 +1,7 @@
+from logging import root
 import tkinter as tk
+from turtle import width
+from click import command
 import cv2
 import mediapipe as mp
 import time
@@ -34,7 +37,7 @@ sound = SoundManager()
 
 activeMenuWidgetBackground = "#FFFFFF" 
 hoverMenuWidgetBackground = "#747472"
-frameTwoBackgroudColor = "#D5DCD3"
+frameTwoBackgroudColor = "#F2F5F1"
 
 toolbarHoverColor = "#88F1E1"
 
@@ -320,8 +323,9 @@ aboutButton.pack(side="left", padx=0)
 # !-------------------------------------------Menu-Bar----------------------------------------------------------------------+
 
 # ! Color Frame
-colorFrame=tk.LabelFrame(frameOne ,text="Colors", height=170, width=230 , borderwidth=0 ,relief="sunken" ,bg="#D6F5EF")
-colorFrame.place(x=545,y=45)
+# colorFrame=tk.LabelFrame(frameOne ,text="Colors", height=170, width=230 , borderwidth=0 ,relief="sunken" ,bg="#D6F5EF")
+# colorFrame.place(x=545,y=45)
+
 
 # !Frame One Tools Functionality Section
 def selectcolor():
@@ -363,100 +367,76 @@ def add_text_window():
     y_slider = tk.Scale(new_window, from_=0, to=800, orient="horizontal", label="Y Position" , length=200)
     y_slider.set(125)
     y_slider.place(x = 350 , y = 200)
+def toggle_mic():
+    global Ai_Mode , start_AI_is_running , sound_on
+    Ai_Mode= not Ai_Mode
+    sound_on=True
+    sound_button.configure(image=icons["sound_on"])
+    if Ai_Mode:
+        Mic_Button.configure(image=icons["mic_open"])
+        if not start_AI_is_running:
+            start_AI()
+            start_AI_is_running=True
+    else :
+        Mic_Button.configure(image=icons["mic"])
+        ptt_stop()
+        start_AI_is_running=False
+
+# ? SubFrames Of Frame One
+
+# toolFrame.pack(side = "left",padx = 20  , pady = 50 )
+toolFrame = ctk.CTkFrame(frameOne ,height=80 , width=120 , fg_color=frameTwoBackgroudColor , border_width=2 , border_color="black")
+toolFrame.place(x=20,y=5 )
+
+Line_TypeFrame=tk.LabelFrame(frameOne , text="Linetypes", height=75, width=130 )
+Line_TypeFrame.place(x=165,y=52)
+
+shapeFrame=tk.LabelFrame(frameOne , text="Shapes",height=70, width=220 , borderwidth=0 ,relief="sunken" ,bg="#E6F1F0")
+shapeFrame.place(x=300,y=55)
+
+colorFrame = ctk.CTkFrame(master=frameOne, fg_color=frameTwoBackgroudColor, height=100, width=150)
+colorFrame.place(x=545, y=45)
+
+addColorFrame = ctk.CTkFrame(master= frameOne , fg_color=frameTwoBackgroudColor)
+addColorFrame.place(x=740, y=37)
+
+cameraFrame = ctk.CTkFrame(master= frameOne , fg_color=frameTwoBackgroudColor)
+cameraFrame.place(x=900, y=40)
+
+micFrame = ctk.CTkFrame(master= frameOne , fg_color=frameTwoBackgroudColor)
+micFrame.place(x=1000,y=48)
+
 
 
 #! -------------------------------------------Frame-One--------------------------------------------------------------------------------
 
-def RedColor():
-    stroke_color.set("Red")
-    current_color_label.config(bg="red")
+colors = ["Red", "Green", "Blue", "Yellow", "Grey",
+          "Black", "White", "Orange", "Purple", "Pink"]
+
+for index, color in enumerate(colors):
+    row = index // 5      # 0 or 1
+    col = index % 5       # 0 to 4
+
+    ctk.CTkButton(
+        master=colorFrame,
+        text=None,
+        fg_color=color.lower(),
+        hover_color=color.lower(),
+        width=25,
+        height=25,
+        corner_radius=12,
+        command=lambda c=color: stroke_color.set(c.lower())
+    ).grid(row=row, column=col, padx=5, pady=5)
 
 
-def GreenColor():
-    stroke_color.set("Green")
-    current_color_label.config(bg="Green")
+colorBoxButton= ctk.CTkButton(master = addColorFrame ,text=None, command=selectcolor , image= icons["select_color"] , fg_color=frameTwoBackgroudColor , hover_color=hoverMenuWidgetBackground)
+colorBoxButton.place(x=0, y=0)
 
+CameraButton= ctk.CTkButton(master = cameraFrame , text=None,image= icons["camera"],command=camera , fg_color=frameTwoBackgroudColor , hover_color=hoverMenuWidgetBackground)
+CameraButton.place(x=0, y=0)
 
-def BlueColor():
-    stroke_color.set("Blue")
-    current_color_label.config(bg="Blue")
-
-
-def YellowColor():
-    stroke_color.set("Yellow")
-    current_color_label.config(bg="Yellow")
-
-
-def GreyColor():
-    stroke_color.set("Grey")
-    current_color_label.config(bg="Grey")
-
-
-def BlackColor():
-    stroke_color.set("Black")
-    current_color_label.config(bg="Black")
-
-
-def WhiteColor():
-    stroke_color.set("White")
-    current_color_label.config(bg="White")
-
-
-def OrangeColor():
-    stroke_color.set("Orange")
-    current_color_label.config(bg="Orange")
-
-
-def PurpleColor():
-    stroke_color.set("Purple")
-    current_color_label.config(bg="Purple")
-
-
-def PinkColor():
-    stroke_color.set("Pink")
-    current_color_label.config(bg="Pink")
-
-
-greenButton=Button(colorFrame ,bg="Green",width=3,height = 1,activebackground="green", command=GreenColor, highlightthickness=0 , relief="flat")
-greenButton.grid(row=0,column=1,padx=5 , pady=5)
-
-redButton=Button(colorFrame ,bg="Red",width=3 , height=1,activebackground="red", command=RedColor, highlightthickness=0 , relief="flat")
-redButton.grid(row=0,column=0 ,padx=5 , pady=5)
-
-blueButton=Button(colorFrame ,bg="Blue",width=3,height = 1,activebackground="blue", command=BlueColor, highlightthickness=0 , relief="flat")
-blueButton.grid(row=0,column=2,padx=5 , pady=5)
-
-yellowButton=Button(colorFrame ,bg="Yellow",width=3,height = 1,activebackground="yellow", command=YellowColor, highlightthickness=0 , relief="flat")
-yellowButton.grid(row=0,column=3,padx=5 , pady=5)
-
-greyButton=Button(colorFrame ,bg="grey",width=3,height = 1,activebackground="grey", command=GreyColor, highlightthickness=0 , relief="flat")
-greyButton.grid(row=0,column=4,padx=5 , pady=5)
-
-blackButton=Button(colorFrame ,bg="black",width=3,height = 1,activebackground="Black" ,command=BlackColor, fg="white", highlightthickness=0 , relief="flat")
-blackButton.grid(row=1,column=0,padx=5 , pady=5)
-
-whiteButton=Button(colorFrame ,bg="White",width=3,height = 1,activebackground="white", command=WhiteColor, highlightthickness=0 , relief="flat")
-whiteButton.grid(row=1,column=1,padx=3 , pady=3)
-
-orangeButton=Button(colorFrame ,bg="Orange",width=3,height = 1,activebackground="Orange", command=OrangeColor, highlightthickness=0 , relief="flat")
-orangeButton.grid(row=1,column=2,padx=3 , pady=3)
-
-purpleButton=Button(colorFrame ,bg="Purple",width=3,height = 1, activebackground="Purple",command=PurpleColor, highlightthickness=0 , relief="flat")
-purpleButton.grid(row=1,column=3,padx=3 , pady=3)
-
-pinkButton=Button(colorFrame ,bg="pink",width=3,height = 1, activebackground="pink",command=PinkColor, highlightthickness=0 , relief="flat")
-pinkButton.grid(row=1,column=4,padx=1 , pady=1)
-
-MoreColors=Button
-
-colorBoxButton= ctk.CTkButton(master = frameOne  , width=55, height=55, command=selectcolor , image= icons["select_color"] , fg_color=frameTwoBackgroudColor)
-colorBoxButton.place(x=740, y=37)
-
-CameraButton= Button(frameOne  , width=90, height=90 ,image= icons["camera"],command=camera ,bg="#D6F5EF" , activebackground="#D6F5EF" , highlightthickness=0 , relief="flat",bd=0)
-CameraButton.place(x=820, y=40)
-
-cameraLabel = tk.Label(frameOne , text="Camera" , width=20 ,bg="#D6F5EF"  )
-cameraLabel.place(x = 793 , y = 130)
+Mic_Button= ctk.CTkButton(master=micFrame,text=None,image=icons["mic"],command=toggle_mic  , fg_color=frameTwoBackgroudColor , hover_color=hoverMenuWidgetBackground)
+Mic_Button.place(x=0,y=0)
 #-------------------------------------------Colors-Frame-Close--------------------------------------------------------------------+
 
 # ------------------------------------------Tool-Functionality-Section-Open----------------------------------------------------------+
@@ -482,7 +462,6 @@ def usePencil():
     DottedLineButton.configure(fg_color="#E5F0EF")
     current_line=1
     
-
 def useEraser():
     if sound_on and not start_AI_is_running:
         sound.play("Eraser_Sound")
@@ -496,8 +475,7 @@ def addText():
 
 #! ---------------------------------------------------------------------------------------------------------------
 # Tool Frame Which Will Contain All The Required Tools etc - pencil , eraser , color
-toolFrame = ctk.CTkFrame(frameOne ,height=80 , width=120 , fg_color=frameTwoBackgroudColor , border_width=2 , border_color="black")
-toolFrame.pack(side = "left",padx = 20  , pady = 50 )
+
 
 #Pencil Button/Icon -> Onclicking The Button The User Can Use The Pencil   
 pencilIcon = ctk.CTkButton(master = toolFrame , text="",fg_color=frameTwoBackgroudColor , hover_color=toolbarHoverColor,width=25 , height=25 , image= icons["pencil"], command=usePencil)
@@ -521,20 +499,20 @@ current_color_label.place(x=752,y=88)
 
 # ----------------------------------------------------------------------------------------------------
 # Adding Borders Along The Different Tools
-border_frame_first = tk.Frame(frameOne , width=2 , height= 100 , bg="black")
-border_frame_first.place(x = 160 , y = 50)
+# border_frame_first = tk.Frame(frameOne , width=2 , height= 100 , bg="black")
+# border_frame_first.place(x = 160 , y = 50)
 
-border_frame_one = tk.Frame(frameOne , width=2 , height= 100 , bg="black")
-border_frame_one.place(x = 290 , y = 50)
+# border_frame_one = tk.Frame(frameOne , width=2 , height= 100 , bg="black")
+# border_frame_one.place(x = 290 , y = 50)
 
-border_frame_two = tk.Frame(frameOne , width=2 , height= 100 , bg="black")
-border_frame_two.place(x = 530 , y = 50)
+# border_frame_two = tk.Frame(frameOne , width=2 , height= 100 , bg="black")
+# border_frame_two.place(x = 530 , y = 50)
 
-border_frame_three = tk.Frame(frameOne , width=2 , height= 100 , bg="black")
-border_frame_three.place(x = 810 , y = 50)
+# border_frame_three = tk.Frame(frameOne , width=2 , height= 100 , bg="black")
+# border_frame_three.place(x = 810 , y = 50)
 
-border_frame_four = tk.Frame(frameOne , width=2 , height= 100 , bg="black")
-border_frame_four.place(x = 915 , y = 50)
+# border_frame_four = tk.Frame(frameOne , width=2 , height= 100 , bg="black")
+# border_frame_four.place(x = 915 , y = 50)
 # ----------------------------------------------------------------------------------------------------
 # Implementing Scale For Pencil Stroke Size So That The User Can Use The Scale To Increase The Size Of The Pencil And Eraser Stroke
 stroke_size = tk.IntVar(value = 5)
@@ -553,19 +531,8 @@ def incre_scale(event):
 size_label = tk.Label(window, textvariable=stroke_size, bg="#FFFFFF" , width=2)
 size_label.place(x=10, y=500)
 #----------------------------------------------------------------------------------------------------
-# ----------------------------------------------------------------------------------------------------
-# The Canvas Frame Where The User Can Draw Things
-canvas = tk.Canvas(frameTwo , width=1280 , height=800 , bg="white")
-canvas.grid(row=0,column=0)
-
-canvas.configure(scrollregion=(-canvas_virtual_size,-canvas_virtual_size,canvas_virtual_size,canvas_virtual_size))
-canvas.config(cursor="crosshair")
-
-# ----------------------------------------------------------------------------------------------------
 
 #----------------------------------------------Line-Type----------------------------------------------------------------
-Line_TypeFrame=tk.LabelFrame(frameOne , text="Linetypes", height=75, width=130 )
-Line_TypeFrame.place(x=165,y=52)
 def solidline():
     global current_line
     current_line=1
@@ -575,8 +542,7 @@ def solidline():
     DashedLineButton.configure(fg_color="#E5F0EF")
     DottedLineButton.configure(fg_color="#E5F0EF")
     canvas.config(cursor = "crosshair")
-SolidLineButton=ctk.CTkButton(master=Line_TypeFrame,text="━━━━",font=("Arial",18,"bold"),width=120,height=20,command=solidline,fg_color="#E5F0EF",text_color="black",hover_color="white")
-SolidLineButton.grid(row=1,column=0)
+
 
 def DashedLine():
     global current_line
@@ -587,8 +553,7 @@ def DashedLine():
     DottedLineButton.configure(fg_color="#E5F0EF")
     SolidLineButton.configure(fg_color="#E5F0EF")
     canvas.config(cursor = "boat")
-DashedLineButton=ctk.CTkButton(master=Line_TypeFrame,text="- - - - - - - -",font=("Arial",18),width=120,height=25,command=DashedLine,fg_color="#E5F0EF",text_color="black",hover_color="white")
-DashedLineButton.grid(row=2,column=0)
+
 
 def DottedLine():
     global current_line
@@ -599,10 +564,22 @@ def DottedLine():
     DashedLineButton.configure(fg_color="#E5F0EF")
     SolidLineButton.configure(fg_color="#E5F0EF")
     canvas.config(cursor = "dot")
+
+SolidLineButton=ctk.CTkButton(master=Line_TypeFrame,text="━━━━",font=("Arial",18,"bold"),width=120,height=20,command=solidline,fg_color="#E5F0EF",text_color="black",hover_color="white")
+SolidLineButton.grid(row=1,column=0)
+
+DashedLineButton=ctk.CTkButton(master=Line_TypeFrame,text="- - - - - - - -",font=("Arial",18),width=120,height=25,command=DashedLine,fg_color="#E5F0EF",text_color="black",hover_color="white")
+DashedLineButton.grid(row=2,column=0)
+
 DottedLineButton=ctk.CTkButton(master=Line_TypeFrame,text="................",font=("Arial",18),width=120,height=10,command=DottedLine,fg_color="#E5F0EF",text_color="black",hover_color="white")
 DottedLineButton.grid(row=3,column=0)
 #----------------------------------------------Line-Type------------------------------------------------------------------
+# The Canvas Frame Where The User Can Draw Things
+canvas = tk.Canvas(frameTwo , width=1280 , height=800 , bg="white")
+canvas.grid(row=0,column=0)
 
+canvas.configure(scrollregion=(-canvas_virtual_size,-canvas_virtual_size,canvas_virtual_size,canvas_virtual_size))
+canvas.config(cursor="crosshair")
 # ----------------------------------------------------------------------------------------------------
 #Creating Pencil Functionality For The Paint Program
 prevPoint = [0,0]
@@ -640,8 +617,7 @@ def paint(event):
 
 
 #-------------------------------------Shape--Frame---Open--------------------------------------------------------------------------------------
-shapeFrame=tk.LabelFrame(frameOne , text="Shapes",height=70, width=220 , borderwidth=0 ,relief="sunken" ,bg="#E6F1F0")
-shapeFrame.place(x=300,y=55)
+
 #Circle--
 def select_circle():
     global shape
@@ -903,20 +879,7 @@ window.bind("<Right>",pan_right)
 Ai_Mode=False
 start_AI_is_running=False
 
-def toggle_mic():
-    global Ai_Mode , start_AI_is_running , sound_on
-    Ai_Mode= not Ai_Mode
-    sound_on=True
-    sound_button.configure(image=icons["sound_on"])
-    if Ai_Mode:
-        Mic_Button.configure(image=icons["mic_open"])
-        if not start_AI_is_running:
-            start_AI()
-            start_AI_is_running=True
-    else :
-        Mic_Button.configure(image=icons["mic"])
-        ptt_stop()
-        start_AI_is_running=False
+
 
 mic=sr.Recognizer()
 mic=pyaudio.PyAudio()
@@ -1032,8 +995,7 @@ def start_AI():
         listener_thread.start()
         start_AI_is_running=True
 #Button Creating
-Mic_Button=Button(frameOne , width=64, height=64,image=icons["mic"],command=toggle_mic ,bg="#D6F5EF", activebackground="#D6F5EF"  , highlightthickness=0 , relief="flat",bd=0)
-Mic_Button.place(x=930,y=48)
+
 
 # Mic_Label = tk.Label(frameOne , text="Voice Command" , width=15 ,bg="#D6F5EF" ,font=("Calibri",8) )
 # Mic_Label.place(x = 918 , y = 130)
