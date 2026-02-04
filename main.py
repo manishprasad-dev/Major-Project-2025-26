@@ -97,11 +97,12 @@ CameraButton.place(x=820, y=40)
 cameraLabel = tk.Label(frameOne , text="Camera" , width=20 ,bg="#D6F5EF"  )
 cameraLabel.place(x = 793 , y = 130)
 #-------------------------------------------Camera-Close-----------------------------------------------------------------------------
+# !-------------------------------------------Menu-Bar----------------------------------------------------------------------+
+menuToolFrame = ctk.CTkFrame(master= menuFrame , fg_color=activeMenuWidgetBackground)
+menuToolFrame.pack(side = "left" , padx = 100)
 
-
-
-#-------------------------------------------Save-Image-Frame-Open--------------------------------------------------------------------+
-# Contains The Save Button Details
+HelpSettingFrame=ctk.CTkFrame(master = menuFrame ,fg_color=activeMenuWidgetBackground)
+HelpSettingFrame.pack(side = "right" )
 def SaveImage():
     if sound_on and not start_AI_is_running:
         sound.play("Save_Sound")
@@ -158,74 +159,6 @@ def toggle_sound():
         sound_button.configure(image=icons["sound_off"])
         sound.play("SoundOff_Sound")
 
-
-menuToolFrame = ctk.CTkFrame(master= menuFrame , fg_color=activeMenuWidgetBackground)
-menuToolFrame.pack(side = "left" , padx = 10 ,fill="x", expand=True)
-
-saveImageButton = ctk.CTkButton(
-    master=menuToolFrame,
-    text=None,
-    image= icons["save"] ,
-    fg_color=activeMenuWidgetBackground,
-    hover_color=hoverMenuWidgetBackground,
-    command=SaveImage,
-    width=0,
-    height=0
-)
-# saveImageButton.grid(row=0, column=0 ,sticky="w" , padx = 10 )
-
-clearImageButton = ctk.CTkButton(
-    master=menuToolFrame,
-    text=None,
-    image= icons["clear"] ,
-    fg_color=activeMenuWidgetBackground,
-    command=clear,
-    width=0,
-    height=0
-)
-# clearImageButton.grid(row=0, column=1 ,sticky="w" , padx = 10 )
-
-undo_button = ctk.CTkButton(
-    master=menuToolFrame,
-    text=None,
-    image= icons["undo"] ,
-    fg_color=activeMenuWidgetBackground,
-    command=undo,
-    width=0,
-    height=0
-)
-# undo_button.grid(row=0, column=2 ,sticky="w" , padx = 10 )
-
-redo_button = ctk.CTkButton(
-    master=menuToolFrame,
-    text=None,
-    image= icons["redo"] ,
-    fg_color=activeMenuWidgetBackground,
-    command=redo,
-    width=0,
-    height=0
-)
-# redo_button.grid(row=0, column=3 ,sticky="w" , padx = 10 )
-
-sound_button = ctk.CTkButton(
-    master=menuToolFrame,
-    text=None,
-    image= icons["sound_on"] ,
-    fg_color=activeMenuWidgetBackground,
-    command=toggle_sound,
-    width=0,
-    height=0
-)
-# sound_button.grid(row=0, column=4 ,sticky="w" , padx = 10 )
-
-saveImageButton.grid(row=0, column=0, padx=5)
-clearImageButton.grid(row=0, column=1, padx=5)
-undo_button.grid(row=0, column=2, padx=5)
-redo_button.grid(row=0, column=3, padx=5)
-sound_button.grid(row=0, column=4, padx=5)
-#-------------------------------------------UNDO-BUTTON-FRAME-CLOSE------------------------------------------------------------------------------------+
-
-#-------------------------------------------New-Window-Open------------------------------------------------------------------------+
 def help_window():
     new_window = tk.Toplevel(window)
     new_window.title("Help")
@@ -313,13 +246,107 @@ def aboutus_window():
     text_area.config(state='disabled')  # Read-only
     text_area.pack(expand=True, fill='both')
 
-
 def setting_window():
     new_window = tk.Toplevel(window)
     new_window.title("Setting")
     new_window.geometry("700x400")
     label = tk.Label(new_window, text="This is a new window")
     label.pack(pady=20)
+
+saveImageButton = ctk.CTkButton(
+    master=menuToolFrame,
+    text=None,
+    image= icons["save"] ,
+    fg_color=activeMenuWidgetBackground,
+    hover_color=hoverMenuWidgetBackground,
+    command=SaveImage,
+    width=0,
+)
+
+clearImageButton = ctk.CTkButton(
+    master=menuToolFrame,
+    text=None,
+    image= icons["clear"] ,
+    fg_color=activeMenuWidgetBackground,
+    hover_color=hoverMenuWidgetBackground,
+    command=clear,
+    width=0,
+)
+
+undo_button = ctk.CTkButton(
+    master=menuToolFrame,
+    text=None,
+    image= icons["undo"] ,
+    fg_color=activeMenuWidgetBackground,
+    hover_color=hoverMenuWidgetBackground,  
+    command=undo,
+    width=0,
+)
+
+redo_button = ctk.CTkButton(
+    master=menuToolFrame,
+    text=None,
+    image= icons["redo"] ,
+    fg_color=activeMenuWidgetBackground,
+    hover_color=hoverMenuWidgetBackground,  
+    command=redo,
+    width=0,
+)
+
+sound_button = ctk.CTkButton(
+    master=menuToolFrame,
+    text=None,
+    image= icons["sound_on"] ,
+    fg_color=activeMenuWidgetBackground,
+    hover_color=hoverMenuWidgetBackground,  
+    command=toggle_sound,
+    width=0,
+)
+
+helpButton = ctk.CTkButton(
+    master=HelpSettingFrame,
+    text=None,
+    image= icons["help"],
+    text_color="black",
+    fg_color=activeMenuWidgetBackground,
+    hover_color=hoverMenuWidgetBackground,  
+    command=help_window,
+    width=0
+)
+
+settingButton = ctk.CTkButton(
+    master=HelpSettingFrame,
+    text=None,
+    image= icons["settings"],
+    text_color="black",
+    fg_color=activeMenuWidgetBackground,
+    hover_color=hoverMenuWidgetBackground,  # optional: slightly darker on hover
+    command=setting_window,
+    width=0
+)
+
+aboutButton = ctk.CTkButton(
+    master=HelpSettingFrame,
+    text=None,
+    image= icons["about"],
+    text_color="black",
+    fg_color=activeMenuWidgetBackground,
+    hover_color=hoverMenuWidgetBackground,  # optional: slightly darker on hover
+    command=aboutus_window,
+    width=0
+)
+
+# Menu Button Placements
+saveImageButton.grid(row=0, column=0, padx=5)
+clearImageButton.grid(row=0, column=1, padx=5)
+undo_button.grid(row=0, column=2, padx=5)
+redo_button.grid(row=0, column=3, padx=5)
+sound_button.grid(row=0, column=4, padx=5)
+helpButton.pack(side="left", padx=0)
+settingButton.pack(side="left", padx=0)
+aboutButton.pack(side="left", padx=0)
+# !-------------------------------------------Menu-Bar----------------------------------------------------------------------+
+#-------------------------------------------Current-Color----------------------------------------------------------------------------------------
 
 def add_text_window():
     new_window = tk.Toplevel(window)
@@ -347,49 +374,6 @@ def add_text_window():
     y_slider = tk.Scale(new_window, from_=0, to=800, orient="horizontal", label="Y Position" , length=200)
     y_slider.set(125)
     y_slider.place(x = 350 , y = 200)
-
-#-------------------------------------------New-Window-Close------------------------------------------------------------------------+
-
-#--------------------------------------------Help-setting-Frame-Open------------------------------------------------------------------------------+
-HelpSettingFrame=ctk.CTkFrame(master = menuFrame ,fg_color=activeMenuWidgetBackground)
-HelpSettingFrame.pack(side = "right" )
-
-helpButton = ctk.CTkButton(
-    master=HelpSettingFrame,
-    text=None,
-    image= icons["help"],
-    text_color="black",
-    fg_color=activeMenuWidgetBackground,
-    hover_color=hoverMenuWidgetBackground,  
-    command=help_window,
-    width=0
-)
-settingButton = ctk.CTkButton(
-    master=HelpSettingFrame,
-    text=None,
-    image= icons["settings"],
-    text_color="black",
-    fg_color=activeMenuWidgetBackground,
-    hover_color=hoverMenuWidgetBackground,  # optional: slightly darker on hover
-    command=setting_window,
-    width=0
-)
-aboutButton = ctk.CTkButton(
-    master=HelpSettingFrame,
-    text=None,
-    image= icons["about"],
-    text_color="black",
-    fg_color=activeMenuWidgetBackground,
-    hover_color=hoverMenuWidgetBackground,  # optional: slightly darker on hover
-    command=aboutus_window,
-    width=0
-)
-
-helpButton.pack(side="left", padx=0)
-settingButton.pack(side="left", padx=0)
-aboutButton.pack(side="left", padx=0)
-#--------------------------------------------Help-Setting-Frame-Close-----------------------------------------------------------------------------+
-#-------------------------------------------Current-Color----------------------------------------------------------------------------------------
 
 # gives the idea of current selected color
 current_color_label=tk.Label(frameOne,width=4,height=1,bg=stroke_color.get(),relief="solid",bd=1)

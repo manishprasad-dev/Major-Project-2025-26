@@ -15,8 +15,8 @@ def load_icons(root):
         "select_color": tk.PhotoImage(file="Icons/Small_MoreColorsWithPlus.png"),
 
         "camera": tk.PhotoImage(file="Icons/camera.png"),
-        "sound_on": tk.PhotoImage(file="Icons/Volume.png"),
-        "sound_off": tk.PhotoImage(file="Icons/Mute.png"),
+        "sound_on": tk.PhotoImage(file="Icons/Icon_Unmute.png"),
+        "sound_off": tk.PhotoImage(file="Icons/Icon_Mute.png"),
         "undo": tk.PhotoImage(file="Icons/Icon_Undo.png"),
         "redo": tk.PhotoImage(file="Icons/Icon_Redo.png"),
         "settings": tk.PhotoImage(file="Icons/Icon_Setting.png"),
