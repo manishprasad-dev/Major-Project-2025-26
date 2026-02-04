@@ -2,13 +2,8 @@ import tkinter as tk
 import cv2
 import mediapipe as mp
 import time
-import pygame
 import customtkinter as ctk 
-from tkinter import colorchooser
-from tkinter import Button
-from tkinter import messagebox
-from tkinter import scrolledtext
-from tkinter import filedialog
+from tkinter import Button , colorchooser , filedialog , messagebox , scrolledtext
 from PIL import ImageGrab as ImageGrab # type: ignore
 from PIL import Image,ImageTk
 import time
@@ -16,11 +11,15 @@ import speech_recognition as sr
 import pyaudio
 import math
 import threading
-import ttkbootstrap as ttk
+
 
 #! Module Import
 from Utils.utils_icons import load_icons
 from Utils.utils_audio import SoundManager
+from Utils.camera_utils import start_camera
+from splash import SplashScreen
+# import threading
+
 # from Menu_Utils.menu_windows import MenuWindow
 # from Utils.color_function import RedColor
 
@@ -37,21 +36,22 @@ sound_on=True#-->Default Sound state
 #! Importing Module Function
 icons = load_icons(window)
 sound = SoundManager()
+# camera module will be imported here
 
 # menu_win = MenuWindow(window)
 
-activeMenuWidgetBackground = "#F4F4E9"; 
+activeMenuWidgetBackground = "#FFFFFF"; 
 hoverMenuWidgetBackground = "#595957";
 frameTwoBackgroudColor = "#92EC7C"
 # ------------------------------------------Parent-Frame-Section-Open----------------------------------------------------------+
-menuFrame = ctk.CTkFrame(master= window , height=30 , fg_color= activeMenuWidgetBackground)
+menuFrame = ctk.CTkFrame(master= window , fg_color= activeMenuWidgetBackground , height=50)
 frameOne = ctk.CTkFrame(master = window  ,fg_color = frameTwoBackgroudColor,height=160)
 frameTwo = ctk.CTkFrame(master = window , fg_color="#134B40" ,height=800)
 frameFoot = ctk.CTkFrame(master = window , fg_color="#5FD5BD" , height=30)
 
-menuFrame.pack(side = "top" , fill = "x")
+menuFrame.pack(side = "top" , fill = "x",expand=True) 
 frameOne.pack(side = "top", fill = "x")
-frameTwo.pack(side = "top", fill = "x")
+frameTwo.pack(side = "top", fill = "x") #canvas will be placed in this frame
 frameFoot.pack(side = "top", fill = "x" , pady = 20)
 #------------------------------------Global-Variables-------------------------------------------------------------------
 shape=""
@@ -69,11 +69,8 @@ canvas_virtual_size=100000
 pencil_select=0
 
 # ------------------------------------------GlobalVariable----------------------------------------------------------+
-#One More Essential Frame Is The MenuFrame Which Is In Line 120
-# ------------------------------------------Parent-Frame-Section-Close----------------------------------------------------------+
-
-
-
+start_AI_is_running=False 
+Ai_Mode=False
 #-------------------------------------------Color-Box-Frame-Open--------------------------------------------------------------------+
 # This Compartment Of The Code Handle The Position And Other Things Of The Color Selection Box
 def selectcolor():
@@ -85,46 +82,15 @@ def selectcolor():
     stroke_color.set(selectedcolor[1])
     current_color_label.config(bg=selectedcolor[1])
 
-
-# colorBoxButton= tk.Button(frameOne  , width=55, height=55, command=selectcolor , image= icons["select_color"] , bg="#D6F5EF" , activebackground="#D6F5EF" , highlightthickness=0 , relief="flat",bd=0)
-# colorBoxButton.place(x=740, y=37)
 colorBoxButton= ctk.CTkButton(master = frameOne  , width=55, height=55, command=selectcolor , image= icons["select_color"] , fg_color=frameTwoBackgroudColor)
 colorBoxButton.place(x=740, y=37)
 
 #-------------------------------------------Color-Box-Frame-Close--------------------------------------------------------------------+
 #-------------------------------------------Camera-OPEN------------------------------------------------------------------------------+
-cap=cv2.VideoCapture(0)
 def camera():
-    sound.play("CameraOpen")
-
-    mpHands=mp.solutions.hands
-    hands=mpHands.Hands()#This class only uses RGB Image
-    mpDraw=mp.solutions.drawing_utils
-
-    cTime=0
-    ptime=0
-
-    while True: 
-        success, img= cap.read()
-        imgRGB=cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
-        results=hands.process(imgRGB)
-        print(results.multi_hand_landmarks)
-        if results.multi_hand_landmarks:
-            for handLms in results.multi_hand_landmarks:
-                mpDraw.draw_landmarks(img,handLms,mpHands.HAND_CONNECTIONS)
-        cTime=time.time()
-        fps=1/(cTime-ptime)
-        pTime=cTime
-
-        cv2.putText(img,str(int(fps)),(10, 70),cv2.FONT_HERSHEY_PLAIN,3,(255,0,255),3)
-
-        cv2.imshow("Image", img)
-        if cv2.waitKey(1) & 0xff == ord('q'):
-            print("Quitting...:...")#after pressing q it will will quit the camera
-            break
-    sound.play("CameraClose")
-
-    cap.release()#This will off the camera
+    if sound_on and not start_AI_is_running:
+        sound.play("CameraOpen_Sound")
+    threading.Thread(target=start_camera, args=(sound,)).start()
 CameraButton= Button(frameOne  , width=90, height=90 ,image= icons["camera"],command=camera ,bg="#D6F5EF" , activebackground="#D6F5EF" , highlightthickness=0 , relief="flat",bd=0)
 CameraButton.place(x=820, y=40)
 
@@ -169,8 +135,6 @@ def clear() :
 def ClearAllEvent():
     clear()  
 def undo():
-
-
     if undo_stack:
         last_item=undo_stack.pop()
         canvas.itemconfig(last_item,state='hidden')
@@ -183,8 +147,20 @@ def redo():
         canvas.itemconfig(item_id,state='normal')
         undo_stack.append(item_id)
 
+def toggle_sound():
+    global sound_on
+    sound_on= not sound_on
+    if sound_on:
+        sound_button.configure(image=icons["sound_on"])
+        if sound_on:
+            sound.play("SoundOn_Sound")
+    else :
+        sound_button.configure(image=icons["sound_off"])
+        sound.play("SoundOff_Sound")
+
+
 menuToolFrame = ctk.CTkFrame(master= menuFrame , fg_color=activeMenuWidgetBackground)
-menuToolFrame.grid(row = 0 , column = 0 )
+menuToolFrame.pack(side = "left" , padx = 10 ,fill="x", expand=True)
 
 saveImageButton = ctk.CTkButton(
     master=menuToolFrame,
@@ -196,51 +172,57 @@ saveImageButton = ctk.CTkButton(
     width=0,
     height=0
 )
-saveImageButton.grid(row=0, column=0 ,sticky="w" , padx = 10 )
+# saveImageButton.grid(row=0, column=0 ,sticky="w" , padx = 10 )
 
 clearImageButton = ctk.CTkButton(
     master=menuToolFrame,
     text=None,
     image= icons["clear"] ,
     fg_color=activeMenuWidgetBackground,
-    command=SaveImage,
+    command=clear,
     width=0,
     height=0
 )
-clearImageButton.grid(row=0, column=1 ,sticky="w" , padx = 10 )
+# clearImageButton.grid(row=0, column=1 ,sticky="w" , padx = 10 )
 
 undo_button = ctk.CTkButton(
     master=menuToolFrame,
     text=None,
     image= icons["undo"] ,
     fg_color=activeMenuWidgetBackground,
-    command=SaveImage,
+    command=undo,
     width=0,
     height=0
 )
-undo_button.grid(row=0, column=2 ,sticky="w" , padx = 10 )
+# undo_button.grid(row=0, column=2 ,sticky="w" , padx = 10 )
 
 redo_button = ctk.CTkButton(
     master=menuToolFrame,
     text=None,
     image= icons["redo"] ,
     fg_color=activeMenuWidgetBackground,
-    command=SaveImage,
+    command=redo,
     width=0,
     height=0
 )
-redo_button.grid(row=0, column=3 ,sticky="w" , padx = 10 )
+# redo_button.grid(row=0, column=3 ,sticky="w" , padx = 10 )
 
 sound_button = ctk.CTkButton(
     master=menuToolFrame,
     text=None,
     image= icons["sound_on"] ,
     fg_color=activeMenuWidgetBackground,
-    command=SaveImage, #change this command to toggle_sound
+    command=toggle_sound,
     width=0,
     height=0
 )
-sound_button.grid(row=0, column=4 ,sticky="w" , padx = 10 )
+# sound_button.grid(row=0, column=4 ,sticky="w" , padx = 10 )
+
+saveImageButton.grid(row=0, column=0, padx=5)
+clearImageButton.grid(row=0, column=1, padx=5)
+undo_button.grid(row=0, column=2, padx=5)
+redo_button.grid(row=0, column=3, padx=5)
+sound_button.grid(row=0, column=4, padx=5)
 #-------------------------------------------UNDO-BUTTON-FRAME-CLOSE------------------------------------------------------------------------------------+
 
 #-------------------------------------------New-Window-Open------------------------------------------------------------------------+
@@ -369,38 +351,43 @@ def add_text_window():
 #-------------------------------------------New-Window-Close------------------------------------------------------------------------+
 
 #--------------------------------------------Help-setting-Frame-Open------------------------------------------------------------------------------+
-HelpSettingFrame=ctk.CTkFrame(master = menuToolFrame ,fg_color="#151312",width=200)
-HelpSettingFrame.grid(row = 0, column = 2 , sticky = "nsew")
-# HelpSettingFrame.pack(side = "right" )
+HelpSettingFrame=ctk.CTkFrame(master = menuFrame ,fg_color=activeMenuWidgetBackground)
+HelpSettingFrame.pack(side = "right" )
 
 helpButton = ctk.CTkButton(
     master=HelpSettingFrame,
-    text="Help",
+    text=None,
+    image= icons["help"],
     text_color="black",
-    fg_color="#FF9578",
-    hover_color="#f7a58a",  
+    fg_color=activeMenuWidgetBackground,
+    hover_color=hoverMenuWidgetBackground,  
     command=help_window,
+    width=0
 )
-helpButton.grid(row=0, column=4,sticky = "nsew")
-
 settingButton = ctk.CTkButton(
     master=HelpSettingFrame,
-    text="Setting",
+    text=None,
+    image= icons["settings"],
     text_color="black",
-    fg_color="#FF9578",
-    hover_color="#f7a58a",  # optional: slightly darker on hover
-    command=help_window,
+    fg_color=activeMenuWidgetBackground,
+    hover_color=hoverMenuWidgetBackground,  # optional: slightly darker on hover
+    command=setting_window,
+    width=0
 )
-settingButton.grid(row=0, column=1,sticky = "nsew")
 aboutButton = ctk.CTkButton(
     master=HelpSettingFrame,
-    text="About Us",
+    text=None,
+    image= icons["about"],
     text_color="black",
-    fg_color="#FF9578",
-    hover_color="#f7a58a",  # optional: slightly darker on hover
-    command=help_window,
+    fg_color=activeMenuWidgetBackground,
+    hover_color=hoverMenuWidgetBackground,  # optional: slightly darker on hover
+    command=aboutus_window,
+    width=0
 )
-aboutButton.grid(row=0, column=2,sticky = "nsew")
+
+helpButton.pack(side="left", padx=0)
+settingButton.pack(side="left", padx=0)
+aboutButton.pack(side="left", padx=0)
 #--------------------------------------------Help-Setting-Frame-Close-----------------------------------------------------------------------------+
 #-------------------------------------------Current-Color----------------------------------------------------------------------------------------
 
@@ -1094,20 +1081,6 @@ def on_resize(event):
 
 sound.play("welcome")
 usePencil()
-#-----------------------------------------------------Sound-Button----------------------------------------------------------------------
-def toggle_sound():
-    global sound_on
-    sound_on= not sound_on
-    if sound_on:
-        sound_button.configure(image=icons["sound_on"])
-        if sound_on:
-            sound.play("SoundOn_Sound")
-    else :
-        sound_button.configure(image=icons["sound_off"])
-        sound.play("SoundOff_Sound")
-
-
-#-----------------------------------------------------Sound-Button-End---------------------------------------------------------------
 window.bind("<Configure>", on_resize)
 # ---------------------------------------Responsive-Setting-Close------------------------------------------------------------
 #--------------------------------------------Zoom---------------------------------------------------------------------
@@ -1210,4 +1183,6 @@ def zoom_fake(scale):
 
 #--------------------------------------------Zoom Close---------------------------------------------------------------------------
 
-window.mainloop()
+if __name__ == "__main__":
+    window.mainloop()
+    
