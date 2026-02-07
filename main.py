@@ -374,12 +374,12 @@ def toggle_mic():
     sound_on=True
     sound_button.configure(image=icons["sound_on"])
     if Ai_Mode:
-        Mic_Button.configure(image=icons["mic_open"])
+        useMicButton.configure(image=icons["mic_open"])
         if not start_AI_is_running:
             start_AI()
             start_AI_is_running=True
     else :
-        Mic_Button.configure(image=icons["mic"])
+        useMicButton.configure(image=icons["mic"])
         ptt_stop()
         start_AI_is_running=False
 
@@ -414,7 +414,8 @@ shapeFrame = ctk.CTkFrame(
     width=220,
     fg_color=frameTwoBackgroudColor,
     border_width=2,
-    border_color="black"
+    border_color="black",
+    # orientation="vertical",
 )
 shapeFrame.grid(row=0, column=2, padx=10, pady=10)
 
@@ -429,27 +430,30 @@ colorFrame = ctk.CTkFrame(
 colorFrame.grid(row=0, column=3, padx=10, pady=10)
 
 addColorFrame = ctk.CTkFrame(
-    frameOne,
-    height=100,
-    width=100,
+    master = frameOne,
+    # height=100,
+    # width=100,
     fg_color=frameTwoBackgroudColor,
     border_width=2,
-    border_color="black"
-    
+    border_color="black",    
 )
-addColorFrame.grid(row=0, column=4, padx=10, pady=10)
+addColorFrame.grid(row=0, column=4)
 
-cameraFrame = ctk.CTkFrame(
-    frameOne,
-    fg_color=frameTwoBackgroudColor
+advToolFrame = ctk.CTkFrame(
+    master = frameOne,
+    width=200 ,
+    height=120,
+    fg_color=frameTwoBackgroudColor,
+    border_width=2,
+    border_color="black",
 )
-cameraFrame.grid(row=0, column=5, padx=10, pady=10)
+advToolFrame.grid(row=0, column=5)
 
-micFrame = ctk.CTkFrame(
-    frameOne,
-    fg_color=frameTwoBackgroudColor
-)
-micFrame.grid(row=0, column=6, padx=10, pady=10)
+# micFrame = ctk.CTkFrame(
+#     frameOne,
+#     fg_color=frameTwoBackgroudColor
+# )
+# micFrame.grid(row=0, column=6, padx=10, pady=10)
 
 toolFrame.grid_propagate(False)
 lineTypeFrame.grid_propagate(False)
@@ -538,89 +542,93 @@ def DottedLine():
     canvas.config(cursor = "dot")
 
 SolidLineButton=ctk.CTkButton(master=lineTypeFrame,text="━━━━",command=solidline,text_color="black",hover_color="white")
-SolidLineButton.grid(row=1,column=0 , padx = 2,pady=2 )
+SolidLineButton.grid(row=1,column=0 , padx = 3,pady=2 )
 
 DashedLineButton=ctk.CTkButton(master=lineTypeFrame,text="- - - - - - - -",command=DashedLine,text_color="black",hover_color="white")
-DashedLineButton.grid(row=2,column=0 , padx = 2,pady=2 )
+DashedLineButton.grid(row=2,column=0 , padx = 3,pady=2 )
 
 DottedLineButton=ctk.CTkButton(master=lineTypeFrame,text="................",command=DottedLine,text_color="black",hover_color="white")
-DottedLineButton.grid(row=3,column=0 , padx = 2,pady=2 )
+DottedLineButton.grid(row=3,column=0 , padx = 3,pady=2 )
 
 #! ----------------------------------------------Line-Type-End---------------------------------------------------------------
 
 
 #!-------------------------------------Shape--Frame---Open--------------------------------------------------------------------------------------
-
-#Circle--
 def select_circle():
     global shape
     if sound_on and not start_AI_is_running:
         sound.play("Circle_Sound")
-    shape="circle"
-circleButton=ctk.CTkButton(shapeFrame,text="",command=select_circle,width=4,height=2 , image = icons["circle"] , fg_color = "transparent")
-circleButton.place(x = 7 , y = 0)
-#Square----
+    shape = "circle"
+
 def select_rectangle():
     global shape
     if sound_on and not start_AI_is_running:
         sound.play("Rectangle_Sound")
-    shape="rectangle"
-rectangle_Shape_Button=ctk.CTkButton(shapeFrame,text="",command=select_rectangle,width=3,height=1 , image = icons["rectangle"], fg_color = "transparent")
-# rectangle_Shape_Button.grid(row=1,column=1 ,padx=5 , pady=5)
-rectangle_Shape_Button.place(x = 35 , y = 0)
-#Line--------------
+    shape = "rectangle"
+
 def select_line():
     global shape
-    shape="line"
     if sound_on and not start_AI_is_running:
         sound.play("Line_Sound")
-lineButton=ctk.CTkButton(shapeFrame,text="",command=select_line,width=3,height=1, image = icons["line"] , fg_color = "transparent")
-lineButton.place(x = 80 , y = 0)
-#Triangle-----------------------
+    shape = "line"
+
 def select_triangle():
     global shape
     if sound_on and not start_AI_is_running:
         sound.play("Triangle_Sound")
     shape = "triangle"
 
-triangle_Shape_Button = ctk.CTkButton(shapeFrame, text="", command=select_triangle, width=3, height=1,  image = icons["triangle"] , fg_color = "transparent")
-triangle_Shape_Button.place(x = 120 , y = 0)
-
-#Polygon-5sides-----------------------------------------
 def select_polygon():
     global shape
-    shape = "polygon"
     if sound_on and not start_AI_is_running:
         sound.play("Pentagon_Sound")
+    shape = "polygon"
 
-polygon_Shape_Button = ctk.CTkButton(shapeFrame, text="", command=select_polygon, width=3, height=1, image = icons["polygon"] , fg_color = "transparent")
-polygon_Shape_Button.place(x = 160 , y = 0)
-#Arc----------------------------------------------------
 def select_arc():
     global shape
-    shape = "arc"
     if sound_on:
         sound.play("ArcResponse")
+    shape = "arc"
 
-arc_Shape_Button = ctk.CTkButton(shapeFrame, text="", command=select_arc, width=4, height=1, image = icons["arc"] , fg_color = "transparent")
-arc_Shape_Button.place(x = 7 , y = 40)
-#Heart-----------------------------------------------------------------------------
 def select_heart():
     global shape
-    shape="heart"
     if sound_on and not start_AI_is_running:
         sound.play("Heart_Sound")
-heart_Shape_Button = ctk.CTkButton(shapeFrame, text="", command=select_heart, width=4, height=1, image = icons["heart"] , fg_color = "transparent")
-heart_Shape_Button.place(x = 35 , y = 40)
+    shape = "heart"
 
-#Arrow---------------------------------------------------------------------------------
 def select_arrow():
     global shape
     if sound_on and not start_AI_is_running:
         sound.play("Arrow_Sound")
-    shape="arrow"
-arrow_Shape_Button = ctk.CTkButton(shapeFrame, text="", command=select_arrow, width=4, height=1, image = icons["arrow"] , fg_color = "transparent")
-arrow_Shape_Button.place(x = 108 , y = 40)
+    shape = "arrow"
+buttons = [
+    (select_circle,   icons["circle"]),
+    (select_rectangle,icons["rectangle"]),
+    (select_line,     icons["line"]),
+    (select_triangle, icons["triangle"]),
+    (select_polygon,  icons["polygon"]),
+    (select_arc,      icons["arc"]),
+    (select_heart,    icons["heart"]),
+    (select_arrow,    icons["arrow"]),
+]
+
+for index, (command, icon) in enumerate(buttons):
+    ctk.CTkButton(
+        master=shapeFrame,
+        text=None,
+        image=icon,
+        command=command,
+        fg_color="transparent",
+        hover_color=hoverMenuWidgetBackground,
+        width=40,
+        height=40
+    ).grid(
+        row=index // 6,   # 2 rows
+        column=index % 6, # 6 columns
+        padx=2,
+        pady=2
+    )
+
 
 #! ------------------------------------Shape--Frame---close--------------------------------------------------------------------------------------
 
@@ -642,7 +650,7 @@ for index, color in enumerate(colors):
         height=25,
         corner_radius=12,
         command=lambda c=color: stroke_color.set(c.lower())
-    ).grid(row=row, column=col, padx=5, pady=5)
+    ).grid(row=row, column=col, padx=7, pady=5)
 
 # more add color option
 colorBoxButton= ctk.CTkButton(master = addColorFrame ,text=None, command=selectcolor , image= icons["select_color"] , fg_color=frameTwoBackgroudColor , hover_color="FFFFFF")
@@ -661,11 +669,11 @@ colorBoxButton.pack()
 
 #! ------------------------------------Color-Frame-Close--------------------------------------------------------------------------------------
 
-CameraButton= ctk.CTkButton(master = cameraFrame , text=None,image= icons["camera"],command=camera , fg_color=frameTwoBackgroudColor , hover_color=hoverMenuWidgetBackground)
-CameraButton.pack()
+openCameraButton = ctk.CTkButton(master = advToolFrame , text=None,image= icons["camera"],command=camera , fg_color=frameTwoBackgroudColor , hover_color=hoverMenuWidgetBackground)
+openCameraButton.grid(row = 0 , column = 0)
 
-Mic_Button= ctk.CTkButton(master=micFrame,text=None,image=icons["mic"],command=toggle_mic  , fg_color=frameTwoBackgroudColor , hover_color=hoverMenuWidgetBackground)
-Mic_Button.pack()
+useMicButton = ctk.CTkButton(master=advToolFrame,text=None,image=icons["mic"],command=toggle_mic  , fg_color=frameTwoBackgroudColor , hover_color=hoverMenuWidgetBackground)
+useMicButton.grid(row = 1 , column = 0)
 #----------------------------------------------Line-Type------------------------------------------------------------------
 
 
@@ -1025,8 +1033,8 @@ def start_AI():
 
 # Mic_Label = tk.Label(frameOne , text="Voice Command" , width=15 ,bg="#D6F5EF" ,font=("Calibri",8) )
 # Mic_Label.place(x = 918 , y = 130)
-# CameraButton= Button(frameOne  , width=90, height=90 ,image= iconOfCamera ,command=camera ,bg="#D6F5EF" , activebackground="#D6F5EF" , highlightthickness=0 , relief="flat",bd=0)
-# CameraButton.place(x=820, y=50)
+# openCameraButton= Button(frameOne  , width=90, height=90 ,image= iconOfCamera ,command=camera ,bg="#D6F5EF" , activebackground="#D6F5EF" , highlightthickness=0 , relief="flat",bd=0)
+# openCameraButton.place(x=820, y=50)
 #-------------------------------------------AI-Function Ends-------------------------------------------------------------+
 
 # ---------------------------------------Shortcut-Keys-Open------------------------------------------------------------
