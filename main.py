@@ -41,17 +41,18 @@ frameTwoBackgroudColor = "#F2F5F1"
 
 toolbarHoverColor = "#88F1E1"
 
+frameFootBackgroundColor = "#C4EAE2"
 # ------------------------------------------Parent-Frame-Section-Open----------------------------------------------------------+
 menuFrame = ctk.CTkFrame(master= window , fg_color= activeMenuWidgetBackground , height=50)
 frameOne = ctk.CTkFrame(master = window  ,fg_color = frameTwoBackgroudColor)
 frameTwo = ctk.CTkFrame(master = window , fg_color="#134B40" ,height=800)
-frameFoot = ctk.CTkFrame(master = window , fg_color="#5FD5BD" , height=30)
+frameFoot = ctk.CTkFrame(master = window , fg_color = frameFootBackgroundColor )
 
 menuFrame.pack(side = "top" , fill = "x",expand=True) 
 frameOne.pack(side = "top", fill = "x")
 frameOne.pack_propagate(False) 
 frameTwo.pack(side = "top", fill = "x") #canvas will be placed in this frame
-frameFoot.pack(side = "top", fill = "x" , pady = 20)
+frameFoot.pack(side = "top", fill = "x" , pady = 20 , expand = True)
 #------------------------------------Global-Variables-------------------------------------------------------------------
 shape=""
 preview_shape=""
@@ -439,6 +440,7 @@ addColorFrame = ctk.CTkFrame(
 )
 addColorFrame.grid(row=0, column=4)
 
+# camera + mic functionality can used from here
 advToolFrame = ctk.CTkFrame(
     master = frameOne,
     width=200 ,
@@ -549,7 +551,6 @@ DashedLineButton.grid(row=2,column=0 , padx = 3,pady=2 )
 
 DottedLineButton=ctk.CTkButton(master=lineTypeFrame,text="................",command=DottedLine,text_color="black",hover_color="white")
 DottedLineButton.grid(row=3,column=0 , padx = 3,pady=2 )
-
 #! ----------------------------------------------Line-Type-End---------------------------------------------------------------
 
 
@@ -669,14 +670,17 @@ colorBoxButton.pack()
 
 #! ------------------------------------Color-Frame-Close--------------------------------------------------------------------------------------
 
+#! ------------------------------------Advance-Frame-Open--------------------------------------------------------------------------------------
 openCameraButton = ctk.CTkButton(master = advToolFrame , text=None,image= icons["camera"],command=camera , fg_color=frameTwoBackgroudColor , hover_color=hoverMenuWidgetBackground)
 openCameraButton.grid(row = 0 , column = 0)
 
 useMicButton = ctk.CTkButton(master=advToolFrame,text=None,image=icons["mic"],command=toggle_mic  , fg_color=frameTwoBackgroudColor , hover_color=hoverMenuWidgetBackground)
 useMicButton.grid(row = 1 , column = 0)
+#! ------------------------------------Advance-Frame-Close--------------------------------------------------------------------------------------
 #----------------------------------------------Line-Type------------------------------------------------------------------
 
 
+# ! Incremeants the left side scale 
 stroke_size = tk.IntVar(value = 5)
 
 scale= ctk.CTkSlider(master = window , from_=1, to=100 , orientation ="vertical" ,variable=stroke_size , height=300,progress_color="#370B42",button_color="#1D0088",fg_color="#A5EAFF")
@@ -684,14 +688,19 @@ scale.place(x =10 ,y = 200)
 def incre_scale(event):
     global stroke_size
     if event.delta > 0 :
-        res = stroke_size.get() + 2
+        res = stroke_size.get() + 1
         stroke_size.set(res)
     else:
-        res = stroke_size.get() - 2
+        res = stroke_size.get() - 1
         stroke_size.set(res)
+
+
 #---This will show stroke size-----------------------------------------------------------------------
+#! IDk - 
 size_label = tk.Label(window, textvariable=stroke_size, bg="#FFFFFF" , width=2)
 size_label.place(x=10, y=500)
+#! IDk - 
+
 # The Canvas Frame Where The User Can Draw Things
 canvas = tk.Canvas(frameTwo , width=1280 , height=800 , bg="white")
 canvas.grid(row=0,column=0)
@@ -913,8 +922,6 @@ window.bind("<Right>",pan_right)
 Ai_Mode=False
 start_AI_is_running=False
 
-
-
 mic=sr.Recognizer()
 mic=pyaudio.PyAudio()
 stream = None
@@ -1074,14 +1081,16 @@ window.bind("<Configure>", on_resize)
 
 zoom_level = 1.0
 
-zoomFrame = tk.Frame(frameFoot, width=300,height = 35 )
-zoomFrame.place(x = 800 , y = 0)
+zoomFrame = ctk.CTkFrame(master=frameFoot, width=300)
+zoomFrame.pack(side = "right")
 
 value = 100
-# zoom_scrollbar = tk.Scale(frameFoot, from_=10, to=200, orient="horizontal",width = 7 ,length = 200 , label="         Zoom In/Zoom Out")
+# zoom_scrollbar = ctk.CTkScale(master = frameFoot, from_=10, to=200, orient="horizontal",width = 7 ,length = 200 , label="         Zoom In/Zoom Out")
+zoom_scrollbar = ctk.CTkSlider(master = zoomFrame, from_=10, to=200, number_of_steps=100)
+zoom_scrollbar.pack(side = "right" , padx = 800)
 
-showCordinates = tk.Frame(frameFoot , width=200 , height=35)
-showCordinates.place(x = 50 , y = 0)
+# showCordinates = tk.Frame(frameFoot , width=200 , height=35)
+# showCordinates.place(x = 50 , y = 0)
 
 # cordinates = "X = {x} : Y = {y}"
 def image_resize_onCanvas():
