@@ -28,14 +28,14 @@ appicon = tk.PhotoImage(file="Icons/App_Icon.png")
 window.iconphoto(False , appicon)
 
 window.title("Paint")
-window.resizable(True , True)
+# window.resizable(True , True)
 sound_on=True#-->Default Sound state
 
 #! Importing Module Function
 icons = load_icons(window)
 sound = SoundManager()
 
-activeMenuWidgetBackground = "#FFFFFF" 
+activeMenuWidgetBackground = "#FFFDFD" 
 hoverMenuWidgetBackground = "#747472"
 frameTwoBackgroudColor = "#F2F5F1"
 
@@ -45,14 +45,16 @@ frameFootBackgroundColor = "#C4EAE2"
 # ------------------------------------------Parent-Frame-Section-Open----------------------------------------------------------+
 menuFrame = ctk.CTkFrame(master= window , fg_color= activeMenuWidgetBackground , height=50)
 frameOne = ctk.CTkFrame(master = window  ,fg_color = frameTwoBackgroudColor)
-frameTwo = ctk.CTkFrame(master = window , fg_color="#134B40" ,height=800)
-frameFoot = ctk.CTkFrame(master = window , fg_color = frameFootBackgroundColor )
+frameTwo = ctk.CTkFrame(master = window , fg_color="#134B40")
+frameFoot = ctk.CTkFrame(master = window,fg_color = "#EF6262",height=60)
 
-menuFrame.pack(side = "top" , fill = "x",expand=True) 
+menuFrame.pack(side = "top" , fill = "x") 
 frameOne.pack(side = "top", fill = "x")
-frameOne.pack_propagate(False) 
+frameOne.pack_propagate(False)
 frameTwo.pack(side = "top", fill = "x") #canvas will be placed in this frame
-frameFoot.pack(side = "top", fill = "x" , pady = 20 , expand = True)
+
+frameFoot.pack(side="bottom", fill="x",expand = True)
+frameFoot.pack_propagate(False)
 #------------------------------------Global-Variables-------------------------------------------------------------------
 shape=""
 preview_shape=""
@@ -634,10 +636,9 @@ for index, (command, icon) in enumerate(buttons):
 #! ------------------------------------Shape--Frame---close--------------------------------------------------------------------------------------
 
 #! ------------------------------------Color-Frame-Open--------------------------------------------------------------------------------------
-
 colors = ["Red", "Green", "Blue", "Yellow", "Grey",
-          "Black", "White", "Orange", "Purple", "Pink"]
 
+          "Black", "White", "Orange", "Purple", "Pink"]
 for index, color in enumerate(colors):
     row = index // 5      # 0 or 1
     col = index % 5       # 0 to 4
@@ -895,8 +896,8 @@ def do_move(event):
     last_y=event.y
     return "break"
 
-Insert_Icon = tk.Button(toolFrame , width=25, height=25, image=icons["glass"], highlightthickness=0 , relief="flat",command=insert)
-Insert_Icon.place(x = 40 , y = 40)
+insertIcon = tk.Button(toolFrame , width=25, height=25, image=icons["glass"], highlightthickness=0 , relief="flat",command=insert)
+insertIcon.place(x = 40 , y = 40)
 
 #------------------------------------------Insert_Image_End----------------------------------------------------------------+
 #------------------------------------------Canvas_Move--------------------------------------------------------------------+
@@ -916,7 +917,6 @@ window.bind("<Up>",pan_down)
 window.bind("<Down>",pan_up)
 window.bind("<Left>",pan_left)
 window.bind("<Right>",pan_right)
-
 #=========================================Canvas_Move_End================================================================+
 #-------------------------------------------Ai-Start--------------------------------------------------------------------+
 Ai_Mode=False
@@ -1053,131 +1053,23 @@ window.bind("<Control-e>", lambda e: useEraser())
 window.bind_all("<Control-c>" , lambda event : selectcolor())
 window.bind_all("<Control-z>" , lambda event : undo())
 window.bind_all("<Control-y>" , lambda event : redo())
-window.bind_all("<Control-plus>" , lambda event : increment_zoom_scale())
+# window.bind_all("<Control-plus>" , lambda event : increment_zoom_scale())
 # window.bind_all("<Control-minus>" , lambda event : decrement_zoom_scale())
 window.bind('<Key-v>',toggle_mic)
 
-# ---------------------------------------Shortcut-Keys-Close------------------------------------------------------------
+# ! Section Handling the zoom functionality
 
+# zoomFrame = ctk.CTkFrame(master=frameFoot , bg_color="#0DB949" , height=50)
+# zoomFrame.pack(side = "right")
 
-# ---------------------------------------Responsive-Setting-Open------------------------------------------------------------
-def on_resize(event):
-
-    if window.state() == "zoomed":
-        frameFoot.place(x= 0 , y = 612)
-        HelpSettingFrame.place(x=1050,y=0)
-        zoomFrame.place(x = 980 , y = 0)
-        
-    else:
-        frameFoot.place(x= 0 , y = 565)
-        HelpSettingFrame.place(x=850,y=0)
-        zoomFrame.place(x = 800 , y = 0)
-
-sound.play("welcome")
-usePencil()
-window.bind("<Configure>", on_resize)
-# ---------------------------------------Responsive-Setting-Close------------------------------------------------------------
-#--------------------------------------------Zoom---------------------------------------------------------------------
-
-zoom_level = 1.0
-
-zoomFrame = ctk.CTkFrame(master=frameFoot, width=300)
-zoomFrame.pack(side = "right")
-
-value = 100
-# zoom_scrollbar = ctk.CTkScale(master = frameFoot, from_=10, to=200, orient="horizontal",width = 7 ,length = 200 , label="         Zoom In/Zoom Out")
-zoom_scrollbar = ctk.CTkSlider(master = zoomFrame, from_=10, to=200, number_of_steps=100)
-zoom_scrollbar.pack(side = "right" , padx = 800)
-
-# showCordinates = tk.Frame(frameFoot , width=200 , height=35)
-# showCordinates.place(x = 50 , y = 0)
-
-# cordinates = "X = {x} : Y = {y}"
-def image_resize_onCanvas():
-    global original_image,image_id,zoom_level
-    if original_image and image_id:
-        new_width=int(original_image.width*zoom_level)
-        new_height=int(original_image.height*zoom_level)
-        resized_image=original_image.resize((new_width,new_height))
-        tk_image=ImageTk.PhotoImage(resized_image)
-        canvas.itemconfig(image_id,image=tk_image)
-        canvas.tk_image=tk_image
-
-def apply_zoom_from_scrollbar(value):
-    global zoom_level
-    scale = int(value) / (zoom_level * 100)
-    zoom_level = int(value) / 100
-    canvas.scale("all", 0, 0, scale, scale)
-    image_resize_onCanvas()
-    # canvas.configure(scrollregion=canvas.bbox("all"))
-
-# zoom_scrollbar.config(command=apply_zoom_from_scrollbar)
-
-def increment_zoom_scale():
-    global zoom_scrollbar,value
-    value = value + 1
-    zoom_scrollbar.set(value) 
-
-def decrement_zoom_scale():
-    global zoom_scrollbar
-    zoom_scrollbar = zoom_scrollbar - 1 
-
-zoom_scrollbar = tk.Scale(zoomFrame, from_=5, to=300, orient="horizontal",width = 7 ,length = 200, variable=value , command = apply_zoom_from_scrollbar)
-zoom_scrollbar.set(value)
-zoom_scrollbar.place(x=50, y=-2)
-
-zoom_Out_Label = tk.Button(zoomFrame ,  image= icons["zoom_out"] , width=20 , height=20,command=decrement_zoom_scale)
-zoom_Out_Label.place(x = 10 , y = 10)
-
-zoom_In_Label = tk.Button(zoomFrame , image= icons["zoom_in"], width=20 , height=20 ,command=increment_zoom_scale)
-zoom_In_Label.place(x = 270 , y = 10)
-
-# Pan with middle mouse button
-drag_start = [0, 0]
-
-def start_pan(event):
-    drag_start[0] = event.x
-    drag_start[1] = event.y
-
-def do_pan(event):
-    dx = drag_start[0] - event.x
-    dy = drag_start[1] - event.y
-    canvas.xview_scroll(int(dx), "units")
-    canvas.yview_scroll(int(dy), "units")
-    drag_start[0] = event.x
-    drag_start[1] = event.y
-
-# Mouse wheel zoom
-def zoom(event):
-    global zoom_level
-    if event.delta > 0 or event.num == 4:
-        scale = 1.1
-    elif event.delta < 0 or event.num == 5:
-        scale = 0.9
-    else:
-        return
-
-    if not (0.5 <= zoom_level * scale <= 5):
-        return
-
-    zoom_level *= scale
-    canvas.scale("all", 0, 0, scale, scale)
-    # canvas.configure(scrollregion=canvas.bbox("all"))
-    zoom_scrollbar.set(int(zoom_level * 100))
-    image_resize_onCanvas()
-
-def zoom_fake(scale):
-    global zoom_level
-    if not (0.5 <= zoom_level * scale <= 5):
-        return
-
-    zoom_level *= scale
-    canvas.scale("all", 0, 0, scale, scale)
-    image_resize_onCanvas()
-    # canvas.configure(scrollregion=canvas.bbox("all"))
-    zoom_scrollbar.set(int(zoom_level * 100))
-
-#--------------------------------------------Zoom Close---------------------------------------------------------------------------
+zoomSlider = ctk.CTkSlider(
+    master=frameFoot,
+    from_=10,
+    to=200,
+    number_of_steps=190
+)
+zoomSlider.set(100)
+zoomSlider.pack(side="right", padx=20, pady=10)
 
 if __name__ == "__main__":
     window.mainloop()

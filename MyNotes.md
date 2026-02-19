@@ -7,7 +7,7 @@ we will store the  width and height of the canvas frame in a variable
 
 <!-- ! when the user will decrement the value of the zoom let suppose 100 to 99% -->
 
-<!-- ? then the width and height will be reinitialized with recalculate value -->
+<!-- ? then the width and height will be reinitialized with recalculated value -->
 
 <!-- How to calculate the value -->
 
