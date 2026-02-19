@@ -46,14 +46,14 @@ frameFootBackgroundColor = "#C4EAE2"
 menuFrame = ctk.CTkFrame(master= window , fg_color= activeMenuWidgetBackground , height=50)
 frameOne = ctk.CTkFrame(master = window  ,fg_color = frameTwoBackgroudColor)
 frameTwo = ctk.CTkFrame(master = window , fg_color="#134B40")
-frameFoot = ctk.CTkFrame(master = window,fg_color = "#EF6262",height=60)
+frameFoot = ctk.CTkFrame(master = window,fg_color = "#EF6262",height=40)
 
 menuFrame.pack(side = "top" , fill = "x") 
 frameOne.pack(side = "top", fill = "x")
 frameOne.pack_propagate(False)
-frameTwo.pack(side = "top", fill = "x") #canvas will be placed in this frame
+frameTwo.pack(side = "top", fill = "both",expand= True) #canvas will be placed in this frame
 
-frameFoot.pack(side="bottom", fill="x",expand = True)
+frameFoot.pack(side="bottom", fill="x")
 frameFoot.pack_propagate(False)
 #------------------------------------Global-Variables-------------------------------------------------------------------
 shape=""
@@ -703,8 +703,9 @@ size_label.place(x=10, y=500)
 #! IDk - 
 
 # The Canvas Frame Where The User Can Draw Things
-canvas = tk.Canvas(frameTwo , width=1280 , height=800 , bg="white")
-canvas.grid(row=0,column=0)
+canvas = tk.Canvas(frameTwo , bg="white")
+# canvas.grid(row=0,column=0)
+canvas.pack(side= "top",fill="both", expand=True)
 
 canvas.configure(scrollregion=(-canvas_virtual_size,-canvas_virtual_size,canvas_virtual_size,canvas_virtual_size))
 canvas.config(cursor="crosshair")
