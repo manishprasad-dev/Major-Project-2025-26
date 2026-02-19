@@ -14,23 +14,28 @@ import speech_recognition as sr
 import pyaudio
 import math
 import threading
+import warnings
+warnings.filterwarnings("ignore", message="pkg_resources is deprecated")
+
 
 
 #! Manual Module Imports
 from Utils.utils_icons import load_icons
 from Utils.utils_audio import SoundManager
 from Utils.camera_utils import start_camera
-from splash import SplashScreen
 
+# ctk.set_appearance_mode("Dark")   # "Light" or "Dark"
+# ctk.set_default_color_theme("blue") # or "dark-blue", "green"
 
-window = tk.Tk()
+window = ctk.CTk()
 appicon = tk.PhotoImage(file="Icons/App_Icon.png")
 window.iconphoto(False , appicon)
 
 window.title("Paint")
 # window.resizable(True , True)
 sound_on=True#-->Default Sound state
-
+# ctk.set_appearance_mode("dark")  # "light" or "system"
+# ctk.set_default_color_theme("blue")
 #! Importing Module Function
 icons = load_icons(window)
 sound = SoundManager()
@@ -229,7 +234,7 @@ def setting_window():
     new_window = tk.Toplevel(window)
     new_window.title("Setting")
     new_window.geometry("700x400")
-    label = tk.Label(new_window, text="This is a new window")
+    label = ctk.CTkLabel(new_window, text="This is a new window")
     label.pack(pady=20)
 
 saveImageButton = ctk.CTkButton(
@@ -655,7 +660,7 @@ for index, color in enumerate(colors):
     ).grid(row=row, column=col, padx=7, pady=5)
 
 # more add color option
-colorBoxButton= ctk.CTkButton(master = addColorFrame ,text=None, command=selectcolor , image= icons["select_color"] , fg_color=frameTwoBackgroudColor , hover_color="FFFFFF")
+colorBoxButton= ctk.CTkButton(master = addColorFrame ,text=None, command=selectcolor , image= icons["select_color"] , fg_color=frameTwoBackgroudColor , hover_color="#FFFFFF")
 colorBoxButton.pack()
 
 # shows the current selected color
@@ -678,13 +683,10 @@ openCameraButton.grid(row = 0 , column = 0)
 useMicButton = ctk.CTkButton(master=advToolFrame,text=None,image=icons["mic"],command=toggle_mic  , fg_color=frameTwoBackgroudColor , hover_color=hoverMenuWidgetBackground)
 useMicButton.grid(row = 1 , column = 0)
 #! ------------------------------------Advance-Frame-Close--------------------------------------------------------------------------------------
-#----------------------------------------------Line-Type------------------------------------------------------------------
-
-
-# ! Incremeants the left side scale 
+#----------------------------------------------Line-Type------------------------------------------------------------------# ! Incremeants the left side scale 
 stroke_size = tk.IntVar(value = 5)
 
-scale= ctk.CTkSlider(master = window , from_=1, to=100 , orientation ="vertical" ,variable=stroke_size , height=300,progress_color="#370B42",button_color="#1D0088",fg_color="#A5EAFF")
+scale= ctk.CTkSlider(master = window , from_=1, to=100 , orientation ="vertical" ,variable=stroke_size , height=300,progress_color="#CB77DF",button_color="#AF9AF7",fg_color="#F7F180")
 scale.place(x =10 ,y = 200)
 def incre_scale(event):
     global stroke_size
@@ -698,7 +700,7 @@ def incre_scale(event):
 
 #---This will show stroke size-----------------------------------------------------------------------
 #! IDk - 
-size_label = tk.Label(window, textvariable=stroke_size, bg="#FFFFFF" , width=2)
+size_label = ctk.CTkLabel(window, textvariable=stroke_size, bg_color="#FFFFFF" , width=2)
 size_label.place(x=10, y=500)
 #! IDk - 
 
@@ -897,7 +899,16 @@ def do_move(event):
     last_y=event.y
     return "break"
 
-insertIcon = tk.Button(toolFrame , width=25, height=25, image=icons["glass"], highlightthickness=0 , relief="flat",command=insert)
+insertIcon = ctk.CTkButton(
+    master=toolFrame,
+    width=25,
+    height=25,
+    image=icons["glass"],
+    text="",
+    fg_color=frameTwoBackgroudColor,
+    hover_color=toolbarHoverColor,
+    command=insert
+)
 insertIcon.place(x = 40 , y = 40)
 
 #------------------------------------------Insert_Image_End----------------------------------------------------------------+
