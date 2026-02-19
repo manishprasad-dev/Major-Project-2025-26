@@ -348,7 +348,15 @@ def selectcolor():
 def camera():
     if sound_on and not start_AI_is_running:
         sound.play("CameraOpen_Sound")
-    threading.Thread(target=start_camera, args=(sound,)).start()
+
+    actions = {
+        "save": SaveImage,
+        "clear": clear,
+        "mute": toggle_sound,
+        "text": addText,
+    }
+
+    threading.Thread(target=start_camera, args=(sound, actions)).start()
 
 def add_text_window():
     new_window = tk.Toplevel(window)
