@@ -18,3 +18,4 @@ let's suppose the width is 1000px, user decrements from 100 to 99% then the late
 
 newWidth = oldWidth x scaleValue/100
 
+tru

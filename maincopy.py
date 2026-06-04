@@ -74,6 +74,8 @@ insert_image=None
 image_on_canvas=None
 inserted_image=[]
 original_image=None
+image_id=None
+current_pil_image=None
 canvas_virtual_size=100000
 pencil_select=0
 
@@ -728,6 +730,7 @@ zoom_factor = 1.0
 prevPoint = [0,0]
 currentPoint = [0,0]
 
+
 def get_line_dash_pattern():
     global current_line
     if current_line==1:
@@ -866,11 +869,12 @@ def add_Text():
     
     canvas.create_text(x_pos_text, y_pos_text, text=entered_text, font=("Arial", 16), fill="black", tags="text")
 
-#-------------------------------------------Insert_Image_Start--------------------------------------------------------------------+
+#-------------------------------------------Insert_Image_START--------------------------------------------------------------------+
 image_id=None
 last_x=0
 last_y=0
 def insert():
+    global current_pil_image
     global insert_image
     global image_id
     global original_image
@@ -878,19 +882,21 @@ def insert():
     file_path=filedialog.askopenfilename(title="Select an image",filetypes=[("Image files", "*.png *.jpg *.jpeg *.bmp *.gif")])
     if file_path:
         #Open the image usinf pillow
-        img=Image.open(file_path)
-        #Resize for better fit
-        img.thumbnail((400,400))
-        original_image=img.copy()
+        current_pil_image = Image.open(file_path)
+
+        current_pil_image.thumbnail((400,400))
+
+        original_image = current_pil_image.copy()
         width,height=original_image.size
         #convert image for tkinter
-        tk_image=ImageTk.PhotoImage(img)
+        tk_image=ImageTk.PhotoImage(current_pil_image)
         inserted_image.append(tk_image)
         window.update()
         #place image on the center of the canvas
         x=canvas.winfo_width()//2
         y=(canvas.winfo_height()//2)-170
         image_id=canvas.create_image(x,y,image=tk_image, anchor="center")
+        undo_stack.append(image_id)
         canvas.tk_image=tk_image
         print("Image inserted on canvas")
         canvas.tag_bind(image_id,"<Button-1>",image_move)
@@ -923,8 +929,8 @@ insertIcon = ctk.CTkButton(
 )
 insertIcon.place(x = 40 , y = 40)
 
-#------------------------------------------Insert_Image_End----------------------------------------------------------------+
-#------------------------------------------Canvas_Move--------------------------------------------------------------------+
+#------------------------------------------Insert_IMAGE_END----------------------------------------------------------------+
+#------------------------------------------Canvas_MOVE--------------------------------------------------------------------+
 def pan_left(event):
     canvas.xview_scroll(-1,"units")
 
@@ -941,7 +947,7 @@ window.bind("<Up>",pan_down)
 window.bind("<Down>",pan_up)
 window.bind("<Left>",pan_left)
 window.bind("<Right>",pan_right)
-#=========================================Canvas_Move_End================================================================+
+#=========================================Canvas_MOVE_END================================================================+
 zoom_factor = 1.0
 
 def apply_zoom(new_zoom):
@@ -952,6 +958,8 @@ def apply_zoom(new_zoom):
     canvas.scale("all", 0, 0, scale, scale)
 
     zoom_factor = new_zoom
+
+    refresh_image_zoom()
 
     bbox = canvas.bbox("all")
     if bbox:
@@ -977,7 +985,31 @@ def zoom_out(event=None):
 def slider_zoom(value):
     apply_zoom(float(value) / 100)
 
+def refresh_image_zoom():
+    global image_id
+    global original_image
+    global zoom_factor
 
+    if image_id is None or original_image is None:
+        return
+
+    x, y = canvas.coords(image_id)
+
+    new_w = max(1, int(original_image.width * zoom_factor))
+    new_h = max(1, int(original_image.height * zoom_factor))
+
+    resized = original_image.resize(
+        (new_w, new_h),
+        Image.Resampling.LANCZOS
+    )
+
+    tk_img = ImageTk.PhotoImage(resized)
+
+    inserted_image.clear()
+    inserted_image.append(tk_img)
+
+    canvas.itemconfig(image_id, image=tk_img)
+    canvas.coords(image_id, x, y)
 
 #-------------------------------------------Ai-Start--------------------------------------------------------------------+
 Ai_Mode=False
@@ -1151,4 +1183,3 @@ zoomInBtn.pack(side="right", padx=5)
 
 if __name__ == "__main__":
     window.mainloop()
-    
