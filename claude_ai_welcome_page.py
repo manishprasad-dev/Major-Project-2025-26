@@ -27,7 +27,81 @@ from Utils.camera_utils import start_camera
 ctk.set_appearance_mode("Dark")   # "Light" or "Dark"
 ctk.set_default_color_theme("blue") # or "dark-blue", "green"
 
+# ==================== WELCOME / SPLASH SCREEN ====================
+def show_welcome_screen():
+    """
+    Standalone splash screen using a plain tk.Tk window.
+    Runs its own event loop, then destroys itself — main app starts after.
+    """
+    splash = tk.Tk()
+    splash.overrideredirect(True)   # borderless
+    splash.resizable(False, False)
+    splash.configure(bg="#134B40")
+
+    # Center on screen
+    W, H = 700, 420
+    sw = splash.winfo_screenwidth()
+    sh = splash.winfo_screenheight()
+    splash.geometry(f"{W}x{H}+{(sw-W)//2}+{(sh-H)//2}")
+
+    # ---- Top accent bar ----
+    tk.Frame(splash, bg="#EF6262", height=6).pack(fill="x", side="top")
+
+    # ---- Paint emoji icon ----
+    tk.Label(splash, text="🎨", font=("Segoe UI Emoji", 72),
+             bg="#134B40", fg="#FFFFFF").pack(pady=(28, 4))
+
+    # ---- App title ----
+    tk.Label(splash, text="Paint Studio",
+             font=("Segoe UI", 36, "bold"),
+             bg="#134B40", fg="#FFFFFF").pack(pady=(0, 4))
+
+    # ---- Subtitle ----
+    tk.Label(splash, text="Your creative canvas — draw, sketch, and express.",
+             font=("Segoe UI", 13),
+             bg="#134B40", fg="#A8D5CD").pack(pady=(0, 4))
+
+    # ---- Team / version ----
+    tk.Label(splash, text="v1.0  ·  By Ricky Singh, Arun Shaw & Manish Kumar Prasad",
+             font=("Segoe UI", 10),
+             bg="#134B40", fg="#6BA297").pack(pady=(0, 16))
+
+    # ---- Progress bar (drawn on a Canvas manually) ----
+    bar_canvas = tk.Canvas(splash, width=420, height=14,
+                           bg="#1f6b5a", highlightthickness=0)
+    bar_canvas.pack(pady=(0, 6))
+    bar_fill = bar_canvas.create_rectangle(0, 0, 0, 14, fill="#EF6262", width=0)
+
+    loading_var = tk.StringVar(value="Initializing…")
+    tk.Label(splash, textvariable=loading_var,
+             font=("Segoe UI", 11),
+             bg="#134B40", fg="#A8D5CD").pack()
+
+    # ---- Bottom accent bar ----
+    tk.Frame(splash, bg="#EF6262", height=6).pack(fill="x", side="bottom")
+
+    # ---- Animation ----
+    steps = 60
+    messages = {0: "Initializing…", 15: "Loading tools…",
+                30: "Setting up canvas…", 45: "Almost ready…", 58: "Welcome!"}
+
+    def animate(step=0):
+        if step <= steps:
+            fill_w = int((step / steps) * 420)
+            bar_canvas.coords(bar_fill, 0, 0, fill_w, 14)
+            if step in messages:
+                loading_var.set(messages[step])
+            splash.after(35, animate, step + 1)
+        else:
+            window.deiconify()  # Show Paint app
+            splash.destroy()   # close splash → main app appears
+
+    animate()
+    splash.mainloop()   # blocks here until splash.destroy() is called
+# ==================== END WELCOME SCREEN ====================
+
 window = ctk.CTk()
+window.withdraw()
 appicon = tk.PhotoImage(file="Icons/App_Icon.png")
 window.iconphoto(False , appicon)
 
@@ -1187,6 +1261,19 @@ zoomInBtn = ctk.CTkButton(
     command=zoom_in
 )
 zoomInBtn.pack(side="right", padx=5)
+def on_closing():
+    global Ai_Mode
 
+    Ai_Mode = False
+
+    window.quit()
+    window.destroy()
+
+window.protocol("WM_DELETE_WINDOW", on_closing)
 if __name__ == "__main__":
-    window.mainloop()
+    show_welcome_screen()
+
+    try:
+        window.mainloop()
+    except tk.TclError:
+        pass

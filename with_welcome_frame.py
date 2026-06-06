@@ -35,8 +35,24 @@ window.title("Paint")
 # window.resizable(True , True)
 window.geometry("1280x768")
 sound_on=True#-->Default Sound state
-# ctk.set_appearance_mode("dark")  # "light" or "system"
-# ctk.set_default_color_theme("blue")
+
+welcomeFrame = ctk.CTkFrame(window)
+welcomeFrame.pack(fill="both", expand=True)
+
+titleLabel = ctk.CTkLabel(
+    welcomeFrame,
+    text="🎨 Paint Application",
+    font=("Segoe UI", 32, "bold")
+)
+titleLabel.pack(pady=50)
+
+subtitleLabel = ctk.CTkLabel(
+    welcomeFrame,
+    text="Create amazing drawings with AI-powered tools",
+    font=("Segoe UI", 16)
+)
+subtitleLabel.pack(pady=10)
+
 #! Importing Module Function
 icons = load_icons(window)
 sound = SoundManager()
@@ -48,13 +64,51 @@ frameTwoBackgroudColor = "#FFFFFF"
 toolbarHoverColor = "#FC9163"
 
 frameFootBackgroundColor = "#6BA297"
-# ------------------------------------------Parent-Frame-Section-Open----------------------------------------------------------+
-menuFrame = ctk.CTkFrame(master= window , fg_color= activeMenuWidgetBackground , height=50)
-frameOne = ctk.CTkFrame(master = window  ,fg_color = frameTwoBackgroudColor)
-frameTwo = ctk.CTkFrame(master = window , fg_color="#134B40")
-frameFoot = ctk.CTkFrame(master = window,fg_color = "#EF6262",height=40)
-# frameFoot = ttk.Frame(master=window, height=40, bootstyle="danger") # type: ignore
 
+# ------------------------------------------Parent-Frame-Section-Open----------------------------------------------------------+
+menuFrame = ctk.CTkFrame(window)
+frameOne = ctk.CTkFrame(window)
+frameTwo = ctk.CTkFrame(window)
+frameFoot = ctk.CTkFrame(window, fg_color=frameFootBackgroundColor, height=50)
+
+def show_main_app():
+    menuFrame.pack(side="top", fill="x")
+
+    frameOne.pack(side="top", fill="x")
+    frameOne.pack_propagate(False)
+
+    frameTwo.pack(side="top", fill="both", expand=True)
+
+    frameFoot.pack(side="bottom", fill="x")
+    frameFoot.pack_propagate(False)
+# frameFoot = ttk.Frame(master=window, height=40, bootstyle="danger") # type: ignore
+def start_paint():
+    welcomeFrame.destroy()
+    show_main_app()
+
+startButton = ctk.CTkButton(
+    welcomeFrame,
+    text="New Canvas",
+    width=200,
+    height=50,
+    command=start_paint
+)
+openButton = ctk.CTkButton(
+    welcomeFrame,
+    text="Open Image",
+    width=200,
+    height=50,
+    command=lambda: [start_paint(), insert()]
+)
+versionLabel = ctk.CTkLabel(
+    welcomeFrame,
+    text="Version 1.0",
+    text_color="gray"
+)
+
+versionLabel.pack(side="bottom", pady=20)
+openButton.pack(pady=10)
+startButton.pack(pady=30)
 menuFrame.pack(side = "top" , fill = "x") 
 frameOne.pack(side = "top", fill = "x")
 frameOne.pack_propagate(False)
