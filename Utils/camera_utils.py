@@ -29,6 +29,33 @@ def start_camera(sound=None, actions=None):
 
     trigger_cooldown = 0
 
+    # Step 1 : Add Drawing Variables
+    prev_x = None
+    prev_y = None
+    # prev_x, prev_y = 0, 0
+    drawing_mode = False
+
+    # Step 2 : Create Finger State Detector
+    def fingers_up(hand):
+        tips = [4, 8, 12, 16, 20]
+        fingers = []
+
+        # Thumb
+        fingers.append(
+            1 if hand.landmark[tips[0]].x >
+                hand.landmark[tips[0] - 1].x else 0
+        )
+
+        # Other fingers
+        for tip in tips[1:]:
+            fingers.append(
+                1 if hand.landmark[tip].y <
+                    hand.landmark[tip - 2].y else 0
+            )
+
+        return fingers
+
+
     while True:
         success, img = cap.read()
         if not success:
@@ -51,28 +78,46 @@ def start_camera(sound=None, actions=None):
 
                 mpDraw.draw_landmarks(img, handLms, mpHands.HAND_CONNECTIONS)
 
-                # Get index finger tip
                 index_tip = handLms.landmark[8]
-                cx, cy = int(index_tip.x * w), int(index_tip.y * h)
+
+                cx = int(index_tip.x * w)
+                cy = int(index_tip.y * h)
 
                 cv2.circle(img, (cx, cy), 10, (0, 255, 0), cv2.FILLED)
 
-                # Button detection
-                for name, (x1, y1, x2, y2) in buttons.items():
-                    if x1 < cx < x2 and y1 < cy < y2:
+                # Draw whenever finger is visible
+                if prev_x is not None:
 
-                        if time.time() - trigger_cooldown > 1:
-                            trigger_cooldown = time.time()
+                    # cv2.line(
+                    #     img,
+                    #     (prev_x, prev_y),
+                    #     (cx, cy),
+                    #     (255, 0, 255),
+                    #     3
+                    # )
+                    cv2.circle(
+                        img,
+                        (cx, cy),
+                        10,
+                        (0, 255, 0),
+                        cv2.FILLED
+                    )
 
-                            if actions and name in actions:
-                                actions[name]()  # Trigger main app action
+                    if actions and "draw" in actions:
+                        try:
+                            actions["draw"](
+                                prev_x,
+                                prev_y,
+                                cx,
+                                cy
+                            )
+                        except Exception as e:
+                            print("DRAW ERROR:", e)
 
-        curr_time = time.time()
-        fps = int(1 / (curr_time - prev_time)) if prev_time else 0
-        prev_time = curr_time
-
-        # cv2.putText(img, f"FPS: {fps}", (10, 120),
-        #             cv2.FONT_HERSHEY_PLAIN, 2, (255, 0, 255), 2)
+                prev_x = cx
+                prev_y = cy
+        else:
+            prev_x, prev_y = None, None
 
         cv2.imshow("Camera", img)
 

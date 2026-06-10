@@ -108,11 +108,9 @@ appicon = tk.PhotoImage(file="Icons/App_Icon.png")
 window.iconphoto(False , appicon)
 
 window.title("Paint")
-# window.resizable(True , True)
 window.geometry("1280x768")
 sound_on=True#-->Default Sound state
-# ctk.set_appearance_mode("dark")  # "light" or "system"
-# ctk.set_default_color_theme("blue")
+
 #! Importing Module Function
 icons = load_icons(window)
 sound = SoundManager()
@@ -129,7 +127,7 @@ menuFrame = ctk.CTkFrame(master= window , fg_color= activeMenuWidgetBackground ,
 frameOne = ctk.CTkFrame(master = window  ,fg_color = frameTwoBackgroudColor)
 frameTwo = ctk.CTkFrame(master = window , fg_color="#134B40")
 frameFoot = ctk.CTkFrame(master = window,fg_color = "#EF6262",height=40)
-# frameFoot = ttk.Frame(master=window, height=40, bootstyle="danger") # type: ignore
+
 
 menuFrame.pack(side = "top" , fill = "x") 
 frameOne.pack(side = "top", fill = "x")
@@ -141,8 +139,8 @@ frameFoot.pack_propagate(False)
 #------------------------------------Global-Variables-------------------------------------------------------------------
 shape=""
 preview_shape=""
-undo_stack=[]
-redo_stack=[]
+undo_stack=[]      # Stores item IDs for undo
+redo_stack=[]      # Stores item IDs for redo
 stroke_color = tk.StringVar(value="white")
 global current_line# 1= solid, 2=Dashed, 3=Dotted
 current_line=1
@@ -190,10 +188,14 @@ def saveImageEvent():
     SaveImage()  
 
 def clear() :
+    global undo_stack, redo_stack
     if sound_on and not start_AI_is_running:
         sound.play("clear_Sound")
     if messagebox.askokcancel("Warning!", "Do you want to clear everything?"):
         canvas.delete('all')
+        # Clear undo/redo stacks to prevent invalid item IDs
+        undo_stack.clear()
+        redo_stack.clear()
         if sound_on:
             sound.play("EverythingCleared_Sound")
 
@@ -201,15 +203,15 @@ def ClearAllEvent():
     clear()  
 def undo():
     if undo_stack:
-        last_item=undo_stack.pop()
-        canvas.itemconfig(last_item,state='hidden')
+        last_item = undo_stack.pop()
+        canvas.itemconfig(last_item, state='hidden')
         redo_stack.append(last_item)
 
 def redo():
-    global undo_stack , redo_stack
+    global undo_stack, redo_stack
     if redo_stack:
-        item_id=redo_stack.pop()
-        canvas.itemconfig(item_id,state='normal')
+        item_id = redo_stack.pop()
+        canvas.itemconfig(item_id, state='normal')
         undo_stack.append(item_id)
 
 def toggle_sound():
@@ -549,19 +551,15 @@ colorFrame.grid(row=0, column=3, padx=10, pady=10)
 
 addColorFrame = ctk.CTkFrame(
     master = frameOne,
-    # height=100,
-    # width=100,
     fg_color=frameTwoBackgroudColor,
     border_width=2,
     border_color="black",    
 )
-addColorFrame.grid(row=0, column=4)
+addColorFrame.grid(row=0, column=4 , padx = 20)
 
 # camera + mic functionality can used from here
 advToolFrame = ctk.CTkFrame(
     master = frameOne,
-    width=200 ,
-    height=120,
     fg_color=frameTwoBackgroudColor,
     border_width=2,
     border_color="black",
@@ -751,9 +749,7 @@ for index, (command, icon) in enumerate(buttons):
 #! ------------------------------------Shape--Frame---close--------------------------------------------------------------------------------------
 
 #! ------------------------------------Color-Frame-Open--------------------------------------------------------------------------------------
-# colors = ["Red", "Green", "Blue", "Yellow", "Grey",
 
-#           "Black", "White", "Orange", "Purple", "Pink"]
 colors = [
 "#FF595E","#FFCA3A","#8AC926",
 "#1982C4","#6A4C93",
@@ -776,28 +772,37 @@ for index, color in enumerate(colors):
     ).grid(row=row, column=col, padx=7, pady=5)
 
 # more add color option
-colorBoxButton= ctk.CTkButton(master = addColorFrame ,text=None, command=selectcolor , image= icons["select_color"] , fg_color=frameTwoBackgroudColor , hover_color="#FFFFFF")
-colorBoxButton.pack()
+colorBoxButton= ctk.CTkButton(master = addColorFrame ,text=None, command=selectcolor , image= icons["select_color"] , fg_color=frameTwoBackgroudColor , hover_color="#FFFFFF" , width=20 , height=20)
+colorBoxButton.grid(row=0 , column=0 , padx=5, pady=5)
 
 # shows the current selected color
-# current_color_label = tk.Label(
-#     addColorFrame,
-#     width=4,
-#     height=1,
-#     bg=stroke_color.get(),
-#     relief="solid",
-#     bd=1
+current_color_label = tk.Label(
+    addColorFrame,
+    width=5,
+    height=2,
+    bg=stroke_color.get(),
+    relief="solid",
+    bd=1
+)
+# current_color_label = ctk.CTkLabel(
+#     master = addColorFrame,
+#     width=5,
+#     height=2,
+#     bg_color=stroke_color.get(),
+#     fg_color=stroke_color.get(),
+    
+#     corner_radius=5
 # )
-# current_color_label.pack(expand=True)
+current_color_label.grid(row=1, column=0, padx=10, pady=10)   
 
 #! ------------------------------------Color-Frame-Close--------------------------------------------------------------------------------------
 
 #! ------------------------------------Advance-Frame-Open--------------------------------------------------------------------------------------
 openCameraButton = ctk.CTkButton(master = advToolFrame , text=None,image= icons["camera"],command=camera , fg_color=frameTwoBackgroudColor , hover_color=hoverMenuWidgetBackground)
-openCameraButton.grid(row = 0 , column = 0)
+openCameraButton.grid(row = 0 , column = 0,padx=5, pady=5)
 
 useMicButton = ctk.CTkButton(master=advToolFrame,text=None,image=icons["mic"],command=toggle_mic  , fg_color=frameTwoBackgroudColor , hover_color=hoverMenuWidgetBackground)
-useMicButton.grid(row = 1 , column = 0)
+useMicButton.grid(row = 1 , column = 0,padx=5, pady=5)
 #! ------------------------------------Advance-Frame-Close--------------------------------------------------------------------------------------
 #----------------------------------------------Line-Type------------------------------------------------------------------# ! Incremeants the left side scale 
 stroke_size = tk.IntVar(value = 5)
@@ -998,7 +1003,9 @@ def add_Text():
     y_pos_text = y_slider.get()
     textofentry.set(" ")
     
-    canvas.create_text(x_pos_text, y_pos_text, text=entered_text, font=("Arial", 16), fill="black", tags="text")
+    # Create text item and add to undo stack
+    text_item = canvas.create_text(x_pos_text, y_pos_text, text=entered_text, font=("Arial", 16), fill="black", tags="text")
+    undo_stack.append(text_item)
 
 #-------------------------------------------Insert_Image_START--------------------------------------------------------------------+
 image_id=None

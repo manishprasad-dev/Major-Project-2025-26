@@ -6,6 +6,7 @@ from click import command
 import cv2
 import mediapipe as mp
 import time
+import random
 import customtkinter as ctk 
 from tkinter import Button , colorchooser , filedialog , messagebox , scrolledtext
 from PIL import ImageGrab as ImageGrab # type: ignore
@@ -16,11 +17,11 @@ import pyaudio
 import math
 import threading
 import warnings
+from collections import deque
+
 warnings.filterwarnings("ignore", message="pkg_resources is deprecated")
 
-from queue import Queue
 
-camera_queue = Queue()
 #! Manual Module Imports
 from Utils.utils_icons import load_icons
 from Utils.utils_audio import SoundManager
@@ -29,81 +30,7 @@ from Utils.camera_utils import start_camera
 ctk.set_appearance_mode("Dark")   # "Light" or "Dark"
 ctk.set_default_color_theme("blue") # or "dark-blue", "green"
 
-# ==================== WELCOME / SPLASH SCREEN ====================
-def show_welcome_screen():
-    """
-    Standalone splash screen using a plain tk.Tk window.
-    Runs its own event loop, then destroys itself — main app starts after.
-    """
-    splash = tk.Tk()
-    splash.overrideredirect(True)   # borderless
-    splash.resizable(False, False)
-    splash.configure(bg="#134B40")
-
-    # Center on screen
-    W, H = 700, 420
-    sw = splash.winfo_screenwidth()
-    sh = splash.winfo_screenheight()
-    splash.geometry(f"{W}x{H}+{(sw-W)//2}+{(sh-H)//2}")
-
-    # ---- Top accent bar ----
-    tk.Frame(splash, bg="#EF6262", height=6).pack(fill="x", side="top")
-
-    # ---- Paint emoji icon ----
-    tk.Label(splash, text="🎨", font=("Segoe UI Emoji", 72),
-             bg="#134B40", fg="#FFFFFF").pack(pady=(28, 4))
-
-    # ---- App title ----
-    tk.Label(splash, text="Paint Studio",
-             font=("Segoe UI", 36, "bold"),
-             bg="#134B40", fg="#FFFFFF").pack(pady=(0, 4))
-
-    # ---- Subtitle ----
-    tk.Label(splash, text="Your creative canvas — draw, sketch, and express.",
-             font=("Segoe UI", 13),
-             bg="#134B40", fg="#A8D5CD").pack(pady=(0, 4))
-
-    # ---- Team / version ----
-    tk.Label(splash, text="v1.0  ·  By Ricky Singh, Arun Shaw & Manish Kumar Prasad",
-             font=("Segoe UI", 10),
-             bg="#134B40", fg="#6BA297").pack(pady=(0, 16))
-
-    # ---- Progress bar (drawn on a Canvas manually) ----
-    bar_canvas = tk.Canvas(splash, width=420, height=14,
-                           bg="#1f6b5a", highlightthickness=0)
-    bar_canvas.pack(pady=(0, 6))
-    bar_fill = bar_canvas.create_rectangle(0, 0, 0, 14, fill="#EF6262", width=0)
-
-    loading_var = tk.StringVar(value="Initializing…")
-    tk.Label(splash, textvariable=loading_var,
-             font=("Segoe UI", 11),
-             bg="#134B40", fg="#A8D5CD").pack()
-
-    # ---- Bottom accent bar ----
-    tk.Frame(splash, bg="#EF6262", height=6).pack(fill="x", side="bottom")
-
-    # ---- Animation ----
-    steps = 60
-    messages = {0: "Initializing…", 15: "Loading tools…",
-                30: "Setting up canvas…", 45: "Almost ready…", 58: "Welcome!"}
-
-    def animate(step=0):
-        if step <= steps:
-            fill_w = int((step / steps) * 420)
-            bar_canvas.coords(bar_fill, 0, 0, fill_w, 14)
-            if step in messages:
-                loading_var.set(messages[step])
-            splash.after(35, animate, step + 1)
-        else:
-            window.deiconify()  # Show Paint app
-            splash.destroy()   # close splash → main app appears
-
-    animate()
-    splash.mainloop()   # blocks here until splash.destroy() is called
-# ==================== END WELCOME SCREEN ====================
-
 window = ctk.CTk()
-window.withdraw()
 appicon = tk.PhotoImage(file="Icons/App_Icon.png")
 window.iconphoto(False , appicon)
 
@@ -138,11 +65,18 @@ frameTwo.pack(side = "top", fill = "both",expand= True) #canvas will be placed i
 
 frameFoot.pack(side="bottom", fill="x")
 frameFoot.pack_propagate(False)
+is_spray_active = False
+symmetry_mode = False
 #------------------------------------Global-Variables-------------------------------------------------------------------
 shape=""
 preview_shape=""
-undo_stack=[]
-redo_stack=[]
+# undo_stack=[]
+# redo_stack=[]
+# Dictionary to hold history for multiple tabs independently
+undo_stacks = {}
+redo_stacks = {}
+undo_stack = []
+redo_stack = []
 stroke_color = tk.StringVar(value="white")
 global current_line# 1= solid, 2=Dashed, 3=Dotted
 current_line=1
@@ -150,8 +84,6 @@ insert_image=None
 image_on_canvas=None
 inserted_image=[]
 original_image=None
-image_id=None
-current_pil_image=None
 canvas_virtual_size=100000
 pencil_select=0
 
@@ -167,22 +99,31 @@ menuToolFrame.pack(side = "left" , padx = 10)
 
 HelpSettingFrame=ctk.CTkFrame(master = menuFrame ,fg_color=activeMenuWidgetBackground)
 HelpSettingFrame.pack(side = "right" )
+
+
 def SaveImage():
     if sound_on and not start_AI_is_running:
         sound.play("Save_Sound")
-    filelocation= filedialog.asksaveasfilename(defaultextension="jpg")
-    x=window.winfo_rootx()+35
-    y=window.winfo_rooty()+250
-    img = ImageGrab.grab(bbox=(x,y,x+1340,y+640))
-    img.save(filelocation)
-    if img.save:
-        if sound_on:
-            sound.play("ImageSaved_Sound")
-    if sound_on:
-        window.after(2000,lambda:sound.play("OpenImage_Sound"))
-    showImage = messagebox.askyesno("Paint App", "Do you want open image?")
+        
+    filelocation= filedialog.asksaveasfilename(defaultextension=".png", filetypes=[("PNG", "*.png"), ("JPG", "*.jpg")])
+    if not filelocation: # Prevents error if user clicks "Cancel"
+        return
+        
+    # Dynamically get the exact coordinates and size of the canvas
+    window.update()
+    x = canvas.winfo_rootx()
+    y = canvas.winfo_rooty()
+    x1 = x + canvas.winfo_width()
+    y1 = y + canvas.winfo_height()
     
-    print(showImage)
+    img = ImageGrab.grab(bbox=(x, y, x1, y1))
+    img.save(filelocation)
+    
+    if sound_on:
+        sound.play("ImageSaved_Sound")
+        window.after(2000, lambda: sound.play("OpenImage_Sound"))
+        
+    showImage = messagebox.askyesno("Paint App", "Do you want open the saved image?")
     if showImage:
         img.show()
     
@@ -196,6 +137,27 @@ def clear() :
         canvas.delete('all')
         if sound_on:
             sound.play("EverythingCleared_Sound")
+
+def new_canvas(event=None):
+    global canvas_count
+    if sound_on and not start_AI_is_running:
+        sound.play("clear_Sound") # Play a sound if you like!
+        
+    # Generate the next canvas name and create the tab
+   # Initialize the very first canvas when the app boots up
+    canvas_count += 1
+    create_new_tab(f"Canvas {canvas_count}")
+
+newCanvasButton = ctk.CTkButton(
+    master=menuToolFrame,
+    text="New", # Swap to image=icons["new"] if you add an icon!
+    font=("Arial", 12, "bold"),
+    text_color="black",
+    fg_color=activeMenuWidgetBackground,
+    hover_color=hoverMenuWidgetBackground,
+    command=new_canvas,
+    width=50,
+)
 
 def ClearAllEvent():
     clear()  
@@ -222,6 +184,17 @@ def toggle_sound():
     else :
         sound_button.configure(image=icons["sound_off"])
         sound.play("SoundOff_Sound")
+
+def toggle_symmetry(event=None):
+    global symmetry_mode
+    symmetry_mode = not symmetry_mode
+    
+    if symmetry_mode:
+        print("Symmetry Mode ON")
+        if sound_on: sound.play("SoundOn_Sound")
+    else:
+        print("Symmetry Mode OFF")
+        if sound_on: sound.play("SoundOff_Sound")
 
 def help_window():
     new_window = tk.Toplevel(window)
@@ -327,6 +300,17 @@ saveImageButton = ctk.CTkButton(
     width=0,
 )
 
+newCanvasButton = ctk.CTkButton(
+    master=menuToolFrame,
+    text="New", 
+    font=("Arial", 12, "bold"),
+    text_color="black",
+    fg_color=activeMenuWidgetBackground,
+    hover_color=hoverMenuWidgetBackground,
+    command=new_canvas,
+    width=50,
+)
+
 clearImageButton = ctk.CTkButton(
     master=menuToolFrame,
     text=None,
@@ -409,34 +393,16 @@ sound_button.grid(row=0, column=4, padx=5)
 helpButton.pack(side="left", padx=0)
 settingButton.pack(side="left", padx=0)
 aboutButton.pack(side="left", padx=0)
+# Menu Button Placements
+newCanvasButton.grid(row=0, column=0, padx=5)
+saveImageButton.grid(row=0, column=1, padx=5)
+clearImageButton.grid(row=0, column=2, padx=5)
+undo_button.grid(row=0, column=3, padx=5)
+redo_button.grid(row=0, column=4, padx=5)
+sound_button.grid(row=0, column=5, padx=5)
 # !-------------------------------------------Menu-Bar----------------------------------------------------------------------+
 
-# ! Color Frame
-# colorFrame=tk.LabelFrame(frameOne ,text="Colors", height=170, width=230 , borderwidth=0 ,relief="sunken" ,bg="#D6F5EF")
-# colorFrame.place(x=545,y=45)
 
-# ! Camera Functionality
-def camera_draw(x1, y1, x2, y2):
-    print("Putting In Queue:", x1, y1, x2, y2)
-    camera_queue.put((x1, y1, x2, y2))
-
-def draw_on_canvas(x1, y1, x2, y2):
-    item = canvas.create_line(
-        x1,
-        y1,
-        x2,
-        y2,
-        fill=stroke_color.get(),
-        width=stroke_size.get(),
-        capstyle=tk.ROUND,
-        smooth=True,
-        splinesteps=36,
-        dash=get_line_dash_pattern()
-    )
-
-    undo_stack.append(item)
-
-# !Frame One Tools Functionality Section
 def selectcolor():
     global stroke_color
     global current_color_label
@@ -454,8 +420,6 @@ def camera():
         "clear": clear,
         "mute": toggle_sound,
         "text": addText,
-        "draw": camera_draw
-
     }
 
     threading.Thread(target=start_camera, args=(sound, actions)).start()
@@ -568,11 +532,7 @@ advToolFrame = ctk.CTkFrame(
 )
 advToolFrame.grid(row=0, column=5)
 
-# micFrame = ctk.CTkFrame(
-#     frameOne,
-#     fg_color=frameTwoBackgroudColor
-# )
-# micFrame.grid(row=0, column=6, padx=10, pady=10)
+
 
 toolFrame.grid_propagate(False)
 lineTypeFrame.grid_propagate(False)
@@ -600,13 +560,37 @@ def usePencil():
     DashedLineButton.configure(fg_color="#E5F0EF")
     DottedLineButton.configure(fg_color="#E5F0EF")
     current_line=1
+
+def useSpray():
+    global is_spray_active
+    is_spray_active = True
     
+    if sound_on and not start_AI_is_running:
+        sound.play("Pencil_Sound") # Or a custom spray sound if you have one
+        
+    canvas.config(cursor="target")
+    SolidLineButton.configure(fg_color="#E5F0EF")
+    DashedLineButton.configure(fg_color="#E5F0EF")
+    DottedLineButton.configure(fg_color="#E5F0EF")
+
+
 def useEraser():
     if sound_on and not start_AI_is_running:
         sound.play("Eraser_Sound")
-    stroke_color.set("white")
-    # current_color_label.config(bg="white")
+        
+    # Make the eraser match the actual canvas background color dynamically
+    current_bg_color = canvas["bg"]
+    stroke_color.set(current_bg_color)
+    
     canvas.config(cursor = "dotbox")
+
+def fill_canvas():
+    if sound_on and not start_AI_is_running:
+        # Plays a sound if you have one, otherwise just fallback to another sound
+        sound.play("selectcolor_Sound") 
+    
+    # Change the canvas background to the current selected color
+    canvas.config(bg=stroke_color.get())
 
 def addText():
     add_text_window()
@@ -623,7 +607,8 @@ fontIcon = ctk.CTkButton(master = toolFrame , text="",fg_color=frameTwoBackgroud
 fontIcon.place(x = 40 , y = 5)
 
 # Fill Icon+
-fillIcon = ctk.CTkButton(master = toolFrame , text="", fg_color=frameTwoBackgroudColor ,hover_color=toolbarHoverColor,width=25, height=25, image=icons["fill"])
+#fillIcon = ctk.CTkButton(master = toolFrame , text="", fg_color=frameTwoBackgroudColor ,hover_color=toolbarHoverColor,width=25, height=25, image=icons["fill"])
+fillIcon = ctk.CTkButton(master = toolFrame , text="", fg_color=frameTwoBackgroudColor ,hover_color=toolbarHoverColor,width=25, height=25, image=icons["fill"], command=fill_canvas)
 fillIcon.place(x=80, y = 5)
 #! ----------------------------------------------------------------------------------------------------
 
@@ -730,6 +715,39 @@ buttons = [
     (select_arrow,    icons["arrow"]),
 ]
 
+#------------------------------------------Canvas_Move--------------------------------------------------------------------+
+
+# >>> NEW CODE TO ADD HERE <<<
+def start_mouse_pan(event):
+    # Marks the starting point of the drag
+    canvas.scan_mark(event.x, event.y)
+
+def do_mouse_pan(event):
+    # Drags the canvas based on the mouse movement
+    canvas.scan_dragto(event.x, event.y, gain=1)
+
+#------------------------------------------Canvas_Move--------------------------------------------------------------------+
+def pan_left(event=None):
+    canvas.xview_scroll(-1, "units")
+
+def pan_right(event=None):
+    canvas.xview_scroll(1, "units")
+
+def pan_up(event=None):
+    canvas.yview_scroll(-1, "units")
+
+def pan_down(event=None):
+    canvas.yview_scroll(1, "units")
+
+window.bind("<Up>", pan_down)
+window.bind("<Down>", pan_up)
+window.bind("<Left>", pan_left)
+window.bind("<Right>", pan_right)
+#=========================================Canvas_Move_End================================================================+
+
+
+# >>> END OF NEW CODE <<<
+
 for index, (command, icon) in enumerate(buttons):
     ctk.CTkButton(
         master=shapeFrame,
@@ -751,15 +769,9 @@ for index, (command, icon) in enumerate(buttons):
 #! ------------------------------------Shape--Frame---close--------------------------------------------------------------------------------------
 
 #! ------------------------------------Color-Frame-Open--------------------------------------------------------------------------------------
-# colors = ["Red", "Green", "Blue", "Yellow", "Grey",
+colors = ["Red", "Green", "Blue", "Yellow", "Grey",
 
-#           "Black", "White", "Orange", "Purple", "Pink"]
-colors = [
-"#FF595E","#FFCA3A","#8AC926",
-"#1982C4","#6A4C93",
-"#000000","#FFFFFF","#808080",
-"#FF9F1C","#2EC4B6"
-]
+          "Black", "White", "Orange", "Purple", "Pink"]
 for index, color in enumerate(colors):
     row = index // 5      # 0 or 1
     col = index % 5       # 0 to 4
@@ -779,16 +791,6 @@ for index, color in enumerate(colors):
 colorBoxButton= ctk.CTkButton(master = addColorFrame ,text=None, command=selectcolor , image= icons["select_color"] , fg_color=frameTwoBackgroudColor , hover_color="#FFFFFF")
 colorBoxButton.pack()
 
-# shows the current selected color
-# current_color_label = tk.Label(
-#     addColorFrame,
-#     width=4,
-#     height=1,
-#     bg=stroke_color.get(),
-#     relief="solid",
-#     bd=1
-# )
-# current_color_label.pack(expand=True)
 
 #! ------------------------------------Color-Frame-Close--------------------------------------------------------------------------------------
 
@@ -820,47 +822,65 @@ size_label = ctk.CTkLabel(window, textvariable=stroke_size, bg_color="#FFFFFF" ,
 size_label.place(x=10, y=500)
 #! IDk - 
 
-def process_camera_queue():
-    print("QUEUE LOOP", time.time())
-    while not camera_queue.empty():
-        print("Got item from queue")
-        x1, y1, x2, y2 = camera_queue.get()
-
-        item = canvas.create_line(
-            x1,
-            y1,
-            x2,
-            y2,
-            fill=stroke_color.get(),
-            width=stroke_size.get(),
-            capstyle=tk.ROUND,
-            smooth=True,
-            splinesteps=36,
-            dash=get_line_dash_pattern()
-        )
-
-        undo_stack.append(item)
-
-    window.after(10, process_camera_queue)
-
-
 # The Canvas Frame Where The User Can Draw Things
-canvas = tk.Canvas(frameTwo , bg="white") #bg colors change the background color of canvas
-# canvas = tk.Canvas(frameTwo ,bg="#464343") #bg colors change the background color of canvas
-# canvas.grid(row=0,column=0)
-canvas.pack(side= "top",fill="both", expand=True)
-process_camera_queue()
+# canvas = tk.Canvas(frameTwo , bg="white")
+# # canvas.grid(row=0,column=0)
+# canvas.pack(side= "top",fill="both", expand=True)
 
-canvas.configure(scrollregion=(-canvas_virtual_size,-canvas_virtual_size,canvas_virtual_size,canvas_virtual_size))
-canvas.config(cursor="crosshair")
+# ------------------ MULTIPLE CANVAS TAB SYSTEM ------------------
+canvas_tabs = ctk.CTkTabview(master=frameTwo, command=lambda: update_active_canvas(), fg_color="#134B40")
+canvas_tabs.pack(side="top", fill="both", expand=True)
+
+canvases = {} # Stores {tab_name: canvas_object}
+canvas_count = 0
+
+def update_active_canvas():
+    """Switches the global canvas reference to whatever tab you click on"""
+    global canvas, undo_stack, redo_stack
+    active_tab = canvas_tabs.get()
+    canvas = canvases[active_tab]
+    
+    # Swap to the active tab's specific undo/redo history
+    undo_stack = undo_stacks[active_tab]
+    redo_stack = redo_stacks[active_tab]
+
+def create_new_tab(tab_name):
+    global canvas, undo_stacks, redo_stacks
+    
+    # 1. Create a new tab and put a fresh canvas inside it
+    new_tab = canvas_tabs.add(tab_name)
+    new_canvas = tk.Canvas(new_tab, bg="white")
+    new_canvas.pack(side="top", fill="both", expand=True)
+    new_canvas.configure(scrollregion=(-canvas_virtual_size, -canvas_virtual_size, canvas_virtual_size, canvas_virtual_size))
+    new_canvas.config(cursor="crosshair")
+
+    # 2. Bind all of your drawing/mouse actions to this SPECIFIC canvas
+    new_canvas.bind("<B1-Motion>", paint)
+    new_canvas.bind("<ButtonRelease-1>", reset_point)
+    new_canvas.bind("<ButtonPress-3>", start_shape)
+    new_canvas.bind("<ButtonRelease-3>", drawshape)
+    new_canvas.bind("<B3-Motion>", on_right_drag)
+    new_canvas.bind("<ButtonPress-2>", start_mouse_pan)
+    new_canvas.bind("<B2-Motion>", do_mouse_pan)
+
+    # 3. Create fresh undo/redo memory for this new tab
+    undo_stacks[tab_name] = []
+    redo_stacks[tab_name] = []
+
+    # 4. Save it, bring it to the front, and activate it
+    canvases[tab_name] = new_canvas
+    canvas_tabs.set(tab_name)
+    update_active_canvas()
+
+# Initialize the very first canvas when the app boots up
+
+# ----------------------------------------------------------------
 
 
-zoom_factor = 1.0
 # ----------------------------------------------------------------------------------------------------
 #Creating Pencil Functionality For The Paint Program
 prevPoint = [0,0]
 currentPoint = [0,0]
-
 
 def get_line_dash_pattern():
     global current_line
@@ -873,24 +893,55 @@ def get_line_dash_pattern():
     else:
         return()
 
-def paint(event):
-    # print(event.type)
-    global is_pan_active
+  
+def reset_point(event):
     global prevPoint
-    global currentPoint
-    global current_line
+    prevPoint = [0, 0]
+
+
+def paint(event):
+    global prevPoint, currentPoint, current_line, is_spray_active
     x = canvas.canvasx(event.x)
     y = canvas.canvasy(event.y)
-    currentPoint =[x,y]
-#----------------------------------------------------------------------------------------------------------------------------------
+    currentPoint = [x, y]
 
-    if prevPoint != [0,0] :
-        item=canvas.create_line(prevPoint[0] , prevPoint[1] , currentPoint[0] , currentPoint[1] ,fill=stroke_color.get() , width=stroke_size.get() , capstyle=tk.ROUND , smooth=True , splinesteps=36,dash=get_line_dash_pattern())
-        undo_stack.append(item)   
-    prevPoint = currentPoint 
+    if is_spray_active:
+        # Spray paint logic: scatter random dots around the cursor
+        radius = stroke_size.get() * 2  # The spread of the spray
+        density = stroke_size.get() * 3 # How many particles spawn per frame
+        
+        for _ in range(density):
+            # Generate random offset
+            dx = random.randint(-radius, radius)
+            dy = random.randint(-radius, radius)
+            
+            # Keep the spray circular using the Pythagorean theorem
+            if dx*dx + dy*dy <= radius*radius:
+                item = canvas.create_oval(x + dx, y + dy, x + dx + 1, y + dy + 1, 
+                                          fill=stroke_color.get(), outline=stroke_color.get())
+                undo_stack.append(item)
+        prevPoint = currentPoint
+        return # Skip the solid line drawing below
 
-    if event.type == "5":
-        prevPoint = [0,0]   
+
+    if prevPoint != [0,0]:
+        # Draw the main line
+        item = canvas.create_line(prevPoint[0], prevPoint[1], currentPoint[0], currentPoint[1], fill=stroke_color.get(), width=stroke_size.get(), capstyle=tk.ROUND, smooth=True, splinesteps=36, dash=get_line_dash_pattern())
+        undo_stack.append(item)
+        
+        # >>> NEW: Draw the mirrored line if symmetry is on <<<
+        if symmetry_mode:
+            # Find the exact center of the visible canvas
+            canvas_center_x = canvas.winfo_width() / 2 
+            
+            # Calculate the mirrored X coordinates
+            mirror_prev_x = canvas_center_x + (canvas_center_x - prevPoint[0])
+            mirror_curr_x = canvas_center_x + (canvas_center_x - currentPoint[0])
+            
+            mirror_item = canvas.create_line(mirror_prev_x, prevPoint[1], mirror_curr_x, currentPoint[1], fill=stroke_color.get(), width=stroke_size.get(), capstyle=tk.ROUND, smooth=True, splinesteps=36, dash=get_line_dash_pattern())
+            undo_stack.append(mirror_item)
+
+    prevPoint = currentPoint
 
 
 start_x=0
@@ -984,11 +1035,6 @@ def on_right_drag(event):
         flat_points = [coord for point in points for coord in point]
         preview_shape = canvas.create_polygon(flat_points, outline=color, fill='', width=size)
 
-canvas.bind("<B1-Motion>" , paint)
-canvas.bind("<ButtonRelease-1>",paint)
-canvas.bind("<ButtonPress-3>",start_shape)
-canvas.bind("<ButtonRelease-3>",drawshape)
-canvas.bind("<B3-Motion>",on_right_drag)
 
 
 #This Function Controls The Add Text Window
@@ -1000,12 +1046,11 @@ def add_Text():
     
     canvas.create_text(x_pos_text, y_pos_text, text=entered_text, font=("Arial", 16), fill="black", tags="text")
 
-#-------------------------------------------Insert_Image_START--------------------------------------------------------------------+
+#-------------------------------------------Insert_Image_Start--------------------------------------------------------------------+
 image_id=None
 last_x=0
 last_y=0
 def insert():
-    global current_pil_image
     global insert_image
     global image_id
     global original_image
@@ -1013,21 +1058,19 @@ def insert():
     file_path=filedialog.askopenfilename(title="Select an image",filetypes=[("Image files", "*.png *.jpg *.jpeg *.bmp *.gif")])
     if file_path:
         #Open the image usinf pillow
-        current_pil_image = Image.open(file_path)
-
-        current_pil_image.thumbnail((400,400))
-
-        original_image = current_pil_image.copy()
+        img=Image.open(file_path)
+        #Resize for better fit
+        img.thumbnail((400,400))
+        original_image=img.copy()
         width,height=original_image.size
         #convert image for tkinter
-        tk_image=ImageTk.PhotoImage(current_pil_image)
+        tk_image=ImageTk.PhotoImage(img)
         inserted_image.append(tk_image)
         window.update()
         #place image on the center of the canvas
         x=canvas.winfo_width()//2
         y=(canvas.winfo_height()//2)-170
         image_id=canvas.create_image(x,y,image=tk_image, anchor="center")
-        undo_stack.append(image_id)
         canvas.tk_image=tk_image
         print("Image inserted on canvas")
         canvas.tag_bind(image_id,"<Button-1>",image_move)
@@ -1060,8 +1103,8 @@ insertIcon = ctk.CTkButton(
 )
 insertIcon.place(x = 40 , y = 40)
 
-#------------------------------------------Insert_IMAGE_END----------------------------------------------------------------+
-#------------------------------------------Canvas_MOVE--------------------------------------------------------------------+
+#------------------------------------------Insert_Image_End----------------------------------------------------------------+
+#------------------------------------------Canvas_Move--------------------------------------------------------------------+
 def pan_left(event):
     canvas.xview_scroll(-1,"units")
 
@@ -1078,70 +1121,7 @@ window.bind("<Up>",pan_down)
 window.bind("<Down>",pan_up)
 window.bind("<Left>",pan_left)
 window.bind("<Right>",pan_right)
-#=========================================Canvas_MOVE_END================================================================+
-zoom_factor = 1.0
-
-def apply_zoom(new_zoom):
-    global zoom_factor
-
-    scale = new_zoom / zoom_factor
-
-    canvas.scale("all", 0, 0, scale, scale)
-
-    zoom_factor = new_zoom
-
-    refresh_image_zoom()
-
-    bbox = canvas.bbox("all")
-    if bbox:
-        canvas.configure(scrollregion=bbox)
-
-
-def zoom_in(event=None):
-    global zoom_factor
-
-    if zoom_factor < 5:
-        apply_zoom(zoom_factor * 1.1)
-        zoomSlider.set(zoom_factor * 100)
-
-
-def zoom_out(event=None):
-    global zoom_factor
-
-    if zoom_factor > 0.2:
-        apply_zoom(zoom_factor / 1.1)
-        zoomSlider.set(zoom_factor * 100)
-
-
-def slider_zoom(value):
-    apply_zoom(float(value) / 100)
-
-def refresh_image_zoom():
-    global image_id
-    global original_image
-    global zoom_factor
-
-    if image_id is None or original_image is None:
-        return
-
-    x, y = canvas.coords(image_id)
-
-    new_w = max(1, int(original_image.width * zoom_factor))
-    new_h = max(1, int(original_image.height * zoom_factor))
-
-    resized = original_image.resize(
-        (new_w, new_h),
-        Image.Resampling.LANCZOS
-    )
-
-    tk_img = ImageTk.PhotoImage(resized)
-
-    inserted_image.clear()
-    inserted_image.append(tk_img)
-
-    canvas.itemconfig(image_id, image=tk_img)
-    canvas.coords(image_id, x, y)
-
+#=========================================Canvas_Move_End================================================================+
 #-------------------------------------------Ai-Start--------------------------------------------------------------------+
 Ai_Mode=False
 start_AI_is_running=False
@@ -1277,10 +1257,14 @@ window.bind("<Control-e>", lambda e: useEraser())
 window.bind_all("<Control-c>" , lambda event : selectcolor())
 window.bind_all("<Control-z>" , lambda event : undo())
 window.bind_all("<Control-y>" , lambda event : redo())
-window.bind("<Control-plus>", zoom_in)
-window.bind("<Control-equal>", zoom_in)
-window.bind("<Control-minus>", zoom_out)
+# window.bind_all("<Control-plus>" , lambda event : increment_zoom_scale())
+# window.bind_all("<Control-minus>" , lambda event : decrement_zoom_scale())
 window.bind('<Key-v>',toggle_mic)
+window.bind("<Control-m>", toggle_symmetry) # M for Mirror/Symmetry
+
+# Bind the middle mouse button (Button-2) for smooth panning
+
+window.bind_all("<Control-n>", new_canvas)
 
 # ! Section Handling the zoom functionality
 
@@ -1291,39 +1275,14 @@ zoomSlider = ctk.CTkSlider(
     master=frameFoot,
     from_=10,
     to=200,
-    number_of_steps=190,
-    command=slider_zoom
+    number_of_steps=190
 )
 zoomSlider.set(100)
 zoomSlider.pack(side="right", padx=20, pady=10)
-zoomOutBtn = ctk.CTkButton(
-    frameFoot,
-    text="-",
-    width=30,
-    command=zoom_out
-)
-zoomOutBtn.pack(side="right", padx=5)
 
-zoomInBtn = ctk.CTkButton(
-    frameFoot,
-    text="+",
-    width=30,
-    command=zoom_in
-)
-zoomInBtn.pack(side="right", padx=5)
-def on_closing():
-    global Ai_Mode
+canvas_count += 1
+create_new_tab(f"Canvas {canvas_count}")
 
-    Ai_Mode = False
-
-    window.quit()
-    window.destroy()
-
-window.protocol("WM_DELETE_WINDOW", on_closing)
 if __name__ == "__main__":
-    show_welcome_screen()
-
-    try:
-        window.mainloop()
-    except tk.TclError:
-        pass
+    window.mainloop()
+    
